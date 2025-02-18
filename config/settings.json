@@ -1,0 +1,44 @@
+{
+  "BROKER_URL": "localhost",
+  "BROKER_PORT": 1883,
+  "PROTOCOL_VERSION": 5,
+  "TOPICS": [
+    {
+      "TYPE": "single",
+      "PREFIX": "sensors/temperature",
+      "DATA": [
+        {
+          "NAME": "temp_value",
+          "TYPE": "float",
+          "MIN_VALUE": 10,
+          "MAX_VALUE": 30
+        }
+      ],
+      "PAYLOAD_ROOT": {
+        "sensor": "temperature_sensor"
+      },
+      "CLEAN_SESSION": true,
+      "RETAIN": false,
+      "QOS": 1,
+      "TIME_INTERVAL": 5
+    },
+    {
+      "TYPE": "multiple",
+      "PREFIX": "sensors/boolean_values",
+      "DATA": [
+        {
+          "NAME": "status",
+          "TYPE": "bool",
+          "TRUE_PROBABILITY": 0.7
+        }
+      ],
+      "PAYLOAD_ROOT": {
+        "sensor": "status_sensor"
+      },
+      "CLEAN_SESSION": true,
+      "RETAIN": false,
+      "QOS": 1,
+      "TIME_INTERVAL": 5
+    }
+  ]
+}

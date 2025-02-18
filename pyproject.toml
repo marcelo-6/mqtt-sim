@@ -1,0 +1,36 @@
+[project]
+name = "mqtt-sim"
+version = "0.0.1"
+description = "MQTT Simulator"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "paho-mqtt>=2.1.0",
+    "pydantic>=2.10.6",
+]
+
+[dependency-groups]
+dev = [
+    "commitizen>=4.2.1",
+    "mypy>=1.15.0",
+    "pre-commit>=4.1.0",
+    "pytest>=8.3.4",
+]
+
+[tool.pytest.ini_options]
+pythonpath = [
+  "app" # the pytests can import modules from this folder
+]
+testpaths = [
+    "tests",
+    "integration",
+]
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "$version"
+version_scheme = "semver"
+version_provider = "pep621"
+update_changelog_on_bump = true
+major_version_zero = true
+
