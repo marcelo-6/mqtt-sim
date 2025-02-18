@@ -1,8 +1,20 @@
+# repos:
+# - hooks:
+#   - id: commitizen
+#   - id: commitizen-branch
+#     stages:
+#     - pre-push
+#   repo: https://github.com/commitizen-tools/commitizen
+#   rev: v4.2.1
+
 repos:
-- hooks:
-  - id: commitizen
-  - id: commitizen-branch
-    stages:
-    - pre-push
-  repo: https://github.com/commitizen-tools/commitizen
-  rev: v4.2.1
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+    -   id: check-yaml
+    -   id: end-of-file-fixer
+    -   id: trailing-whitespace
+-   repo: https://github.com/psf/black
+    rev: 22.10.0
+    hooks:
+    -   id: black
