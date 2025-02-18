@@ -13,9 +13,9 @@ The MQTT Simulator is a Python-based simulator designed to simulate the sending 
 - **Threaded Simulation**: Each topic runs in its own thread to simulate parallel sensor networks.
 
 ## TODOs
-# Add make file
-# Add/fix docker compose / DockerFile
-# Cleaup and doctring
+- Add make file
+- Add/fix docker compose / DockerFile
+- Cleaup and doctring
 
 ## Getting Started
 
@@ -105,7 +105,7 @@ The `settings.json` file allows you to configure the MQTT broker and define the 
 - **BROKER_URL**: The URL or IP address of the MQTT broker. (e.g., `localhost` or `mqtt.example.com`)
 - **BROKER_PORT**: The port used by the MQTT broker. Default is `1883`.
 - **PROTOCOL_VERSION**: The MQTT protocol version to use. The default is `4` for MQTTv3.1.1. If you need MQTTv5, change it to `5`.
-  
+
 ### Topics
 
 The `TOPICS` array defines the list of topics that the simulator will use. Each topic object has the following properties:
@@ -114,9 +114,9 @@ The `TOPICS` array defines the list of topics that the simulator will use. Each 
   - `single`: A single topic with the format `/PREFIX`
   - `multiple`: Multiple topics with the format `/PREFIX/{id}`, where `id` is a range of integers.
   - `list`: A list of topics with the format `/PREFIX/{item}`, where `item` is a list of custom values.
-  
+
 - **PREFIX**: The base name for the topic (e.g., `sensors/temperature` or `sensors/boolean_values`).
-  
+
 - **DATA**: The data associated with the topic. This is an array of objects defining the data's type and other properties. Each data object contains:
   - **NAME**: The name of the data (e.g., `temp_value`).
   - **TYPE**: The type of data:
