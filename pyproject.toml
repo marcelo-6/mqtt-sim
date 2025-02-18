@@ -1,6 +1,6 @@
 [project]
 name = "mqtt-sim"
-version = "0.0.1"
+version = "0.0.2"
 description = "MQTT Simulator"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -33,4 +33,3 @@ version_scheme = "semver"
 version_provider = "pep621"
 update_changelog_on_bump = true
 major_version_zero = true
-
