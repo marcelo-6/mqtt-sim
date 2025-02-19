@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-from typing import List, Optional
 
 
 class BrokerSettings(BaseModel):
@@ -13,14 +12,3 @@ class ClientSettings(BaseModel):
     retain: bool
     qos: int
     time_interval: int
-
-
-class TopicConfig(BaseModel):
-    TYPE: str
-    PREFIX: str
-    DATA: dict
-    PAYLOAD_ROOT: Optional[dict]
-    CLEAN_SESSION: bool
-    RETAIN: bool
-    QOS: int
-    TIME_INTERVAL: int

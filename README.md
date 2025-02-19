@@ -13,10 +13,11 @@ The MQTT Simulator is a Python-based simulator designed to simulate the sending 
 - **Threaded Simulation**: Each topic runs in its own thread to simulate parallel sensor networks.
 
 ## TODOs
+- add better logic for number generation
 - Add make file
 - Add/fix docker compose / DockerFile
 - Cleaup and doctring
-
+- test with uv run pytest tests/test_simulator.py
 ## Getting Started
 
 To get started with the MQTT Simulator, follow the steps below:

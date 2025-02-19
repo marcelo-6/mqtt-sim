@@ -1,44 +1,134 @@
 {
-  "BROKER_URL": "localhost",
-  "BROKER_PORT": 1883,
-  "PROTOCOL_VERSION": 5,
-  "TOPICS": [
-    {
-      "TYPE": "single",
-      "PREFIX": "sensors/temperature",
-      "DATA": [
+    "broker_url": "localhost",
+    "broker_port": 1883,
+    "topics": [
         {
-          "NAME": "temp_value",
-          "TYPE": "float",
-          "MIN_VALUE": 10,
-          "MAX_VALUE": 30
-        }
-      ],
-      "PAYLOAD_ROOT": {
-        "sensor": "temperature_sensor"
-      },
-      "CLEAN_SESSION": true,
-      "RETAIN": false,
-      "QOS": 1,
-      "TIME_INTERVAL": 5
-    },
-    {
-      "TYPE": "multiple",
-      "PREFIX": "sensors/boolean_values",
-      "DATA": [
+            "topic_type": "multiple",
+            "prefix": "lamp",
+            "range_start": 1,
+            "range_end": 2,
+            "time_interval": 4,
+            "data": [
+                {
+                    "name": "on",
+                    "data_type": "bool",
+                    "retain_probability": 0.85
+                },
+                {
+                    "name": "temperature",
+                    "data_type": "int",
+                    "initial_value": 2750,
+                    "min_value": 2700,
+                    "max_value": 6500,
+                    "max_step": 250,
+                    "retain_probability": 0.3,
+                    "reset_probability": 0.1,
+                    "increase_probability": 0.8,
+                    "restart_on_boundaries": true
+                }
+            ]
+        },
         {
-          "NAME": "status",
-          "TYPE": "bool",
-          "TRUE_PROBABILITY": 0.7
+            "topic_type": "single",
+            "prefix": "air_quality",
+            "time_interval": 6,
+            "data": [
+                {
+                    "name": "pollution_particles",
+                    "data_type": "float",
+                    "min_value": 0,
+                    "max_value": 1,
+                    "max_step": 0.15,
+                    "retain_probability": 0.9
+                },
+                {
+                    "name": "alert",
+                    "data_type": "bool",
+                    "retain_probability": 0.9
+                }
+            ]
+        },
+        {
+            "topic_type": "list",
+            "prefix": "temperature",
+            "list": ["roof", "basement"],
+            "time_interval": 8,
+            "data": [
+                {
+                    "name": "temperature",
+                    "data_type": "float",
+                    "min_value": 20,
+                    "max_value": 55,
+                    "max_step": 3,
+                    "retain_probability": 0.5,
+                    "increase_probability": 0.6
+                }
+            ]
+        },
+        {
+            "topic_type": "single",
+            "prefix": "freezer",
+            "time_interval": 6,
+            "data": [
+                {
+                    "name": "temperature",
+                    "data_type": "math_expression",
+                    "retain_probability": 0.1,
+                    "math_expression": "2*math.pow(x,2)+1",
+                    "interval_start": 0,
+                    "interval_end": 5,
+                    "min_delta": 0.3,
+                    "max_delta": 0.5
+                }
+            ]
+        },
+        {
+            "topic_type": "single",
+            "prefix": "location",
+            "time_interval": 5,
+            "payload_root": {
+                "user_id": "abc123"
+            },
+            "data": [
+                {
+                    "name": "position",
+                    "data_type": "raw_values",
+                    "restart_on_end": true,
+                    "values": [
+                        "moving",
+                        "stopped"
+                    ]
+                },
+                {
+                    "name": "coordinate",
+                    "data_type": "raw_values",
+                    "value_default": {
+                      "alt": 0
+                    },
+                    "restart_on_end": true,
+                    "values": [
+                        {
+                            "alt": 0.1,
+                            "lat": -121.883682,
+                            "long": 37.354635
+                        },
+                        {
+                            "lat": -121.883352,
+                            "long": 37.354192
+                        },
+                        {
+                            "alt": 0.15,
+                            "lat": -121.884284,
+                            "long": 37.353757
+                        },
+                        {
+                            "alt": 0.22,
+                            "lat": -121.885227,
+                            "long": 37.353324
+                        }
+                    ]
+                }
+            ]
         }
-      ],
-      "PAYLOAD_ROOT": {
-        "sensor": "status_sensor"
-      },
-      "CLEAN_SESSION": true,
-      "RETAIN": false,
-      "QOS": 1,
-      "TIME_INTERVAL": 5
-    }
-  ]
+    ]
 }

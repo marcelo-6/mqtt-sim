@@ -1,6 +1,6 @@
 import argparse
 from pathlib import Path
-from simulator import Simulator
+from classes.simulator import Simulator
 
 
 def default_settings():
