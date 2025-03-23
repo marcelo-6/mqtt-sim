@@ -1,56 +1,161 @@
-# MQTT Simulator
+<!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
+<a id="readme-top"></a>
+<!--
+*** This README follows a structure inspired by othneildrew's Best-README-Template.
+*** If you have suggestions for improvements, please open an issue or PR!
+-->
 
-## Overview
 
-The MQTT Simulator is a Python-based simulator designed to simulate the sending of JSON objects from sensors or devices to an MQTT broker. The simulator uses configurable topics and data, allowing for flexible simulation of various sensor types (e.g., analog values such as temperature, pressure, discrete values, raw data, and mathematical expressions). It can be used for testing MQTT-based systems, simulating sensor networks, or stress testing MQTT brokers.
+<!-- PROJECT SHIELDS -->
+<!--
+*** Reference style links for readability. See the bottom of this doc for
+*** the declaration of reference variables for contributors-url, forks-url, etc.
+-->
+<!-- [![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url] -->
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
+[![project_license][license-shield]][license-url]
+<!-- [![LinkedIn][linkedin-shield]][linkedin-url] -->
 
-## Features
 
-- **Configurable Topics**: Support for single, multiple, and list-based topics, each with custom data types (e.g., float, bool, raw values, math expressions).
-- **MQTT Support**: Simulates MQTT messages and publishes them to an MQTT broker at configurable intervals.
-- **Data Types**: Supports numeric ranges, boolean values with configurable probabilities, raw data values, and mathematical expressions.
-- **Client Settings**: Adjustable MQTT client settings, including `QoS`, `retain`, `clean session`, and time intervals between messages.
-- **Threaded Simulation**: Each topic runs in its own thread to simulate parallel sensor networks.
 
+<!-- PROJECT LOGO -->
+<br />
+<div align="center">
+  <h3 align="center">MQTT Simulator</h3>
+
+  <p align="center">
+    A Python-based simulator for sending JSON objects from sensors/devices to an MQTT broker.
+  </p>
+</div>
+
+
+
+<!-- TABLE OF CONTENTS -->
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li><a href="#about-the-project">About The Project</a>
+      <ul>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#built-with">Built With</a></li>
+      </ul>
+    </li>
+    <li><a href="#getting-started">Getting Started</a>
+      <ul>
+        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#installation">Installation & Setup</a></li>
+      </ul>
+    </li>
+    <li><a href="#usage">Usage</a>
+      <ul>
+        <li><a href="#global-configuration">Global Configuration</a></li>
+        <li><a href="#topic-configuration">Topic Configuration</a></li>
+        <li><a href="#data-configuration">Data Configuration</a></li>
+      </ul>
+    </li>
+    <li><a href="#topic-types--data-types-explained">Topic Types & Data Types Explained</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#contributing">Contributing</a></li>
+    <li><a href="#license">License</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="#acknowledgments">Acknowledgments</a></li>
+  </ol>
+</details>
+
+
+
+<!-- ABOUT THE PROJECT -->
+## About The Project
+
+The **MQTT Simulator** is a Python-based simulator designed to send JSON objects from sensors or devices to an MQTT broker. With flexible topic configurations and a variety of data types, it can simulate analog sensors (e.g., temperature, pressure), discrete sensors (boolean), raw data sequences, or even mathematical expressions. It's ideal for testing MQTT-based systems, simulating sensor networks, or stress-testing brokers.
+
+<!-- [![Product Name Screen Shot][product-screenshot]](https://example.com) -->
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+### Features
+
+- **Configurable Topics**
+  Support for single, multiple, and list-based topics, each with custom data types (float, bool, raw values, math expressions).
+
+- **MQTT Support**
+  Simulates MQTT messages and publishes them to an MQTT broker at configurable intervals.
+
+- **Data Types**
+  Numeric ranges, boolean values with configurable probabilities, raw data sequences, and mathematical expressions.
+
+- **Client Settings**
+  Adjustable MQTT client parameters: QoS, retain, clean session, and time intervals.
+
+- **Threaded Simulation**
+  Each topic runs on its own thread, enabling parallel simulations of multiple sensors.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+### Built With
+
+- [Python 3](https://www.python.org/)
+- [paho-mqtt](https://pypi.org/project/paho-mqtt/)
+- [uv](https://pypi.org/project/uv/) (for package management)
+- [Pydantic](https://pydantic-docs.helpmanual.io/) (for data validation)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+<!-- GETTING STARTED -->
 ## Getting Started
+
+This section explains how to set up the MQTT Simulator locally.
 
 ### Prerequisites
 
-- [Python 3](https://www.python.org/) (Tested on 3.12)
-- A running MQTT broker (e.g., [Mosquitto](https://mosquitto.org/), [HiveMQ](https://www.hivemq.com/), docker-compose file provided for local testing using Mosquitto)
+- **Python 3.6 or higher**
+- A running MQTT broker (e.g., [Mosquitto](https://mosquitto.org/), [HiveMQ](https://www.hivemq.com/))
 - [uv](https://pypi.org/project/uv/) for package management
 
-### Installing Dependencies
+### Installation
 
-Create a virtual environment and install dependencies:
+1. **Clone the repo**
+   ```bash
+   git clone https://github.com/marcelo-6/mqtt-sim.git
+   ```
+2. **Install dependencies**
+   ```bash
+   uv install
+   ```
+3. **Optional**: If you'd like to run tests, do from root folder:
+   ```bash
+   uv run pytest tests/
+   ```
 
-```shell
-uv install
-```
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-### Running the Simulator
 
-Update the `config/settings.json` file with your broker and topic configurations.
 
-Run the simulator with the default settings:
+<!-- USAGE EXAMPLES -->
+## Usage
 
-```shell
+After installing, you can run:
+
+```bash
 uv run app/main.py
 ```
 
-Or specify an alternate settings file:
+By default, it looks for a `settings.json` in your `config/` folder. You can also specify a custom file:
 
-```shell
-uv run app/main.py -f <path/to/settings.json>
+```bash
+uv run app/main.py -f path/to/settings.json
 ```
 
-## `settings.json` Configuration
-
-The simulator is fully configured via the `config/settings.json` file. Below are details on every setting.
+Below is a summary of the main configuration parameters:
 
 ### Global Configuration
-
-The top-level structure of `settings.json` is as follows:
 
 ```json
 {
@@ -61,28 +166,24 @@ The top-level structure of `settings.json` is as follows:
   "retain": false,
   "qos": 2,
   "time_interval": 10,
-  "verbose": true,
-  "topics": [
-    ...
-  ]
+  "verbose": false,
+  "topics": []
 }
 ```
 
 | Key               | Type   | Default   | Description                                                                                                                   | Required |
 | ----------------- | ------ | --------- | ----------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `broker_url`      | string | localhost | The URL or IP address of the MQTT broker where data will be published.                                                      | Yes      |
+| `broker_url`      | string | localhost | The URL or IP address of the MQTT broker.                                                                                     | Yes      |
 | `broker_port`     | number | 1883      | The port used by the broker.                                                                                                  | Yes      |
-| `protocol_version`| number | 4         | The MQTT protocol version (use `3` for MQTTv31, `4` for MQTTv311, or `5` for MQTTv5).                                        | No      |
-| `clean_session`   | bool   | true      | Whether to use a clean session (ignored if `protocol_version` is `5`).                                                       | No       |
-| `retain`          | bool   | false     | Whether messages should be retained by the broker.                                                                          | No       |
-| `qos`             | number | 2         | The Quality of Service level for publishing messages.                                                                      | No       |
-| `time_interval`   | number | 10        | The time (in seconds) between each message submission.                                                                     | No       |
-| `verbose`         | bool   | false     | Enables detailed logging of simulator events.                                                                               | No       |
-| `topics`          | array  | —         | An array of topic configuration objects.                                                                                    | Yes      |
+| `protocol_version`| number | 4         | MQTT protocol version: `3`(MQTTv31), `4`(MQTTv311), or `5`(MQTTv5).                                                            | Yes      |
+| `clean_session`   | bool   | true      | Whether to use a clean session (ignored if `protocol_version`=5).                                                             | No       |
+| `retain`          | bool   | false     | Whether messages should be retained.                                                                                          | No       |
+| `qos`             | number | 2         | Quality of Service level (0, 1, or 2).                                                                                       | No       |
+| `time_interval`   | number | 10        | The time (in seconds) between consecutive messages.                                                                           | No       |
+| `verbose`         | bool   | false     | Enables verbose logging for debugging.                                                                                       | No       |
+| `topics`          | array  | —         | An array of topic configuration objects.                                                                                      | Yes      |
 
 ### Topic Configuration
-
-Each object in the `topics` array defines a topic and follows this structure:
 
 ```json
 {
@@ -91,29 +192,25 @@ Each object in the `topics` array defines a topic and follows this structure:
   "range_start": 1,
   "range_end": 2,
   "time_interval": 25,
-  "data": [
-    ...
-  ]
+  "data": []
 }
 ```
 
-| Key             | Type           | Description                                                                                                                   | Required                                          |
-| --------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `topic_type`    | string         | Defines the topic format: `"single"`, `"multiple"`, or `"list"`.                                                              | Yes                                               |
-| `prefix`        | string         | The base name of the topic. For `"multiple"`, an ID is appended; for `"list"`, an item is appended.                             | Yes                                               |
-| `list`          | array\<any>    | When `topic_type` is `"list"`, each item in the array is appended to `prefix` as `/<item>`.                                     | Required if `topic_type` is `"list"`                |
-| `range_start`   | number         | When `topic_type` is `"multiple"`, the starting ID.                                                                          | Required if `topic_type` is `"multiple"`            |
-| `range_end`     | number         | When `topic_type` is `"multiple"`, the ending ID.                                                                            | Required if `topic_type` is `"multiple"`            |
-| `clean_session` | bool           | Overrides the global `clean_session` for this topic.                                                                       | No                                                |
-| `retain`        | bool           | Overrides the global `retain` for this topic.                                                                              | No                                                |
-| `qos`           | number         | Overrides the global `qos` for this topic.                                                                                 | No                                                |
-| `time_interval` | number         | Overrides the global `time_interval` for this topic.                                                                       | No                                                |
-| `payload_root`  | object         | A base JSON object to include with every message for this topic.                                                           | No                                          |
-| `data`          | array\<object> | An array of data configuration objects defining the sensor values and behavior.                                             | Yes                                               |
+| Key             | Type           | Description                                                                                                                       | Required |
+| --------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `topic_type`    | string         | One of: `"single"`, `"multiple"`, `"list"`.                                                                                      | Yes      |
+| `prefix`        | string         | The base topic name. For `"multiple"`, an ID is appended; for `"list"`, an item is appended.                                      | Yes      |
+| `list`          | array\<any>    | For `"list"`, each item in the array is appended to `prefix`.                                                                      | If `topic_type`=`"list"` |
+| `range_start`   | number         | For `"multiple"`, the starting ID.                                                                                                | If `topic_type`=`"multiple"` |
+| `range_end`     | number         | For `"multiple"`, the ending ID.                                                                                                  | If `topic_type`=`"multiple"` |
+| `clean_session` | bool           | Overrides global `clean_session`.                                                                                               | No       |
+| `retain`        | bool           | Overrides global `retain`.                                                                                                       | No       |
+| `qos`           | number         | Overrides global `qos`.                                                                                                          | No       |
+| `time_interval` | number         | Overrides global `time_interval` for this topic.                                                                                 | No       |
+| `payload_root`  | object         | Base JSON object included in every message.                                                                                     | Optional |
+| `data`          | array\<object> | An array of data configuration objects.                                                                                          | Yes      |
 
 ### Data Configuration
-
-Within each topic, the `data` array defines sensor values. Each data object follows this structure:
 
 ```json
 {
@@ -130,103 +227,137 @@ Within each topic, the `data` array defines sensor values. Each data object foll
 }
 ```
 
-| Key                    | Type         | Description                                                                                                                                                           | Required                                           |
-| ---------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| `name`                 | string       | The property name in the generated JSON payload.                                                                                                                    | Yes                                                |
-| `data_type`            | string       | The type of data. Valid values: `"int"`, `"float"`, `"bool"`, `"math_expression"`, or `"raw_values"`.                                                               | Yes                                                |
-| `retain_probability`   | number       | (0–1) Probability to retain the current value.                                                                                                                      | Optional (default: `0`)                            |
-| `reset_probability`    | number       | (0–1) Probability to reset to `initial_value`.                                                                                                                      | Optional (default: `0`)                            |
-| `initial_value`        | varies       | The starting value. If not provided, one is generated automatically based on the type.                                                                               | Optional                                           |
-| `min_value`            | number       | The minimum value (required for `"int"` and `"float"`).                                                                                                              | Required for `"int"` and `"float"`                 |
-| `max_value`            | number       | The maximum value (required for `"int"` and `"float"`).                                                                                                              | Required for `"int"` and `"float"`                 |
-| `max_step`             | number       | The maximum change allowed between successive values (required for `"int"` and `"float"`).                                                                             | Required for `"int"` and `"float"`                 |
-| `increase_probability` | number       | (0–1) For `"int"` or `"float"`, the probability that the next value is greater than the previous one.                                                                | Optional (default: `0.5`)                          |
-| `restart_on_boundaries`| bool         | For `"int"` or `"float"`, if true, resets to `initial_value` when reaching `min_value` or `max_value`.                                                                 | Optional (default: `false`)                        |
-| `math_expression`      | string       | A mathematical expression (Python syntax) using variable `x` and math module functions (e.g., `"2*math.pow(x,2)+1"`).                                               | Required if `data_type` is `"math_expression"`     |
-| `interval_start`       | number       | The starting value for `x` in a math expression.                                                                                                                     | Required for `"math_expression"`                   |
-| `interval_end`         | number       | The ending value for `x` in a math expression.                                                                                                                       | Required for `"math_expression"`                   |
-| `min_delta`            | number       | The minimum change added to `x` between iterations (for `"math_expression"`).                                                                                         | Required for `"math_expression"`                   |
-| `max_delta`            | number       | The maximum change added to `x` between iterations (for `"math_expression"`).                                                                                         | Required for `"math_expression"`                   |
-| `index_start`          | number       | The starting index for the `values` array (for `"raw_values"`).                                                                                                      | Optional (default: `0`)                            |
-| `index_end`            | number       | The ending index for the `values` array (for `"raw_values"`).                                                                                                        | Optional (default: `len(values)-1`)                |
-| `restart_on_end`       | bool         | If true and the index reaches `index_end`, resets to `index_start`; otherwise, the data becomes inactive.                                                             | Optional (default: `false`)                        |
-| `values`               | array\<any>  | An array of values to be published (for `"raw_values"`).                                                                                                             | Required for `"raw_values"`                        |
-| `value_default`        | object       | A default object merged with each item from `values` (if items are objects for `"raw_values"`).                                                                        | Optional (default: `{}`)                           |
+| Key                    | Type         | Description                                                                                                                                         | Required |
+| ---------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `name`                 | string       | The JSON property name in the payload.                                                                                                              | Yes      |
+| `data_type`            | string       | `"int"`, `"float"`, `"bool"`, `"math_expression"`, or `"raw_values"`.                                                                               | Yes      |
+| `retain_probability`   | number       | Probability (0–1) of retaining the current value.                                                                                                   | No       |
+| `reset_probability`    | number       | Probability (0–1) of resetting to `initial_value`.                                                                                                  | No       |
+| `initial_value`        | varies       | A fixed starting value. If not provided, the simulator generates one for numeric/boolean or uses built-in logic for math/expressions.               | No       |
+| `min_value`            | number       | Minimum value for `"int"` or `"float"`.                                                                                                             | If `data_type`=`"int"/"float"` |
+| `max_value`            | number       | Maximum value for `"int"` or `"float"`.                                                                                                             | If `data_type`=`"int"/"float"` |
+| `max_step`             | number       | Maximum step size for numeric types.                                                                                                                | If `data_type`=`"int"/"float"` |
+| `increase_probability` | number       | Probability (0–1) that the next numeric value is greater than the old one.                                                                          | No       |
+| `restart_on_boundaries`| bool         | If true, resets to `initial_value` when hitting `min_value` or `max_value`.                                                                         | No       |
+| `math_expression`      | string       | A Python math expression using `x`.                                                                                                                 | If `data_type`=`"math_expression"` |
+| `interval_start`       | number       | The initial `x` for math expressions.                                                                                                               | If `data_type`=`"math_expression"` |
+| `interval_end`         | number       | The maximum `x` for math expressions.                                                                                                               | If `data_type`=`"math_expression"` |
+| `min_delta`            | number       | Minimum change in `x` each iteration for math expressions.                                                                                          | If `data_type`=`"math_expression"` |
+| `max_delta`            | number       | Maximum change in `x` each iteration for math expressions.                                                                                          | If `data_type`=`"math_expression"` |
+| `index_start`          | number       | The starting index for `"raw_values"`.                                                                                                              | If `data_type`=`"raw_values"` |
+| `index_end`            | number       | The ending index for `"raw_values"`.                                                                                                                | If `data_type`=`"raw_values"` |
+| `restart_on_end`       | bool         | If true, restarts the array upon hitting `index_end`; otherwise the value becomes inactive.                                                         | No       |
+| `values`               | array\<any>  | The array of possible values (for `"raw_values"`).                                                                                                  | If `data_type`=`"raw_values"` |
+| `value_default`        | object       | Merged default object for each entry in `values` (if items are objects).                                                                            | No       |
 
-## Topic Types
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-### Overview
-The simulator supports three primary topic types—each offers a distinct way of constructing MQTT topic names, which in turn helps simulate different kinds of sensor networks or device setups.
+
+
+## Topic Types & Data Types Explained
+
+Below is a high-level overview showing how the simulator organizes MQTT topics and generates data:
 
 ```mermaid
 flowchart TD
     A[Topic Types]
-    A --> S[Single<br>prefix = temperature<br>Final: temperature]
-    A --> M[Multiple<br>prefix = lamp<br>range_start=1, range_end=2<br>Final: lamp/1, lamp/2]
-    A --> L[List <br>prefix = temperature<br>list=roof,basement<br>Final: temperature/roof, temperature/basement]
-```
+    A --> S[Single<br>Use a single fixed prefix]
+    A --> M[Multiple<br>prefix + range_start..range_end]
+    A --> L[List<br>prefix + items in an array]
 
-1. **Single**
-   - **Description**: Creates a single fixed topic by using the provided `prefix`.
-   - **Usage**: Suitable for simulating exactly one device or sensor that publishes all its data to the same topic (e.g., one temperature sensor in one room).
-   - **Example**:
-     - Prefix: `air_quality`
-     - Final Topic: `air_quality`
-
-2. **Multiple**
-   - **Description**: Automatically generates multiple topics by appending numeric IDs in a specified range (`range_start` to `range_end`) to the `prefix`.
-   - **Usage**: Ideal for simulating a group of similar devices, each with its own ID (e.g., multiple streetlights, each identified by an integer ID).
-   - **Example**:
-     - Prefix: `lamp`
-     - Range Start: `1`, Range End: `2`
-     - Final Topics: `lamp/1`, `lamp/2`
-
-3. **List**
-   - **Description**: Uses an array of items that will be appended to the `prefix` to form the final topic name.
-   - **Usage**: Great for simulating devices or sensors in a finite set of known locations, or enumerating a custom list of items (e.g., `temperature/roof`, `temperature/basement`).
-   - **Example**:
-     - Prefix: `temperature`
-     - List: `["roof", "basement"]`
-     - Final Topics: `temperature/roof`, `temperature/basement`
-
----
-
-## Data Types
-
-### Overview
-Each topic can include one or more data definitions within its `data` array. Data definitions specify how the simulator should generate the payload (JSON) for that specific property (field). Below are the supported data types:
-
-```mermaid
-flowchart TD
     D[Data Types]
-    D --> N[Int/Float<br>Range-based numeric generation]
-    D --> B[Bool<br>Retain/flip with probability]
-    D --> ME[Math Expression<br>Evaluate an expression with variable x]
-    D --> RV[Raw Values<br>Cycle or reset through a list of predefined items]
+    D --> IF[Int/Float<br>Range-based numeric data]
+    D --> B[Bool<br>Binary, can flip or retain]
+    D --> ME[Math Expression<br>Function-based sensor]
+    D --> RV[Raw Values<br>Cycle or reset through a list]
 ```
 
-1. **Int / Float**
-   - **Description**: Numeric values (integer or float) with adjustable ranges, steps, and probabilities for increasing/decreasing.
-   - **Usage**: Ideal for simulating analog sensors (e.g., temperature, pressure, volume).
+**Topic Types**:
+- **Single**: One fixed topic (e.g. `air_quality`).
+- **Multiple**: Range-based topics (e.g. `lamp/1`, `lamp/2`).
+- **List**: A prefix plus a finite set of items (e.g. `temperature/roof`, `temperature/basement`).
 
-2. **Bool**
-   - **Description**: Boolean values (`True`/`False`) with probability for retaining or flipping.
-   - **Usage**: Perfect for on/off states, open/closed signals, or any binary sensor.
+**Data Types**:
+- **Int / Float**: Numeric data with configurable min/max, step size, and probabilities.
+- **Bool**: True/False with a retain or flip probability.
+- **Math Expression**: Evaluate custom expressions, advancing a variable `x`.
+- **Raw Values**: Publishes from a predefined list (e.g. GPS waypoints).
 
-3. **Math Expression**
-   - **Description**: Evaluates a Pythonic math expression (`math_expression`) using a variable `x` that changes at each iteration.
-   - **Usage**: Great for advanced simulation scenarios where a sensor reading follows a predictable formula (e.g., parabolic or sinusoidal trends).
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-4. **Raw Values**
-   - **Description**: Publishes elements from a predefined list (`values`). Each iteration moves to the next element, or restarts/ends based on your configuration.
-   - **Usage**: Useful for enumerating custom states, replaying recorded data, or stepping through a finite sequence (e.g., GPS waypoints).
 
----
 
+<!-- ROADMAP -->
+## Roadmap
+
+- [ ] Add Makefile
+
+See the [open issues](https://github.com/marcelo-6/mqtt-sim/issues) for a full list of proposed features (and known issues).
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+<!-- CONTRIBUTING -->
+## Contributing
+
+Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**!
+
+If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also open an issue with the tag "enhancement".
+Don't forget to give the project a star! Thanks again!
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+<!-- ### Top contributors:
+
+<a href="https://github.com/marcelo-6/mqtt-sim/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=github_username/repo_name" alt="contrib.rocks image" />
+</a>
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+ -->
+
+
+<!-- LICENSE -->
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Distributed under the `project_license`. See `LICENSE.txt` for more information.
 
-## Forked from
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-[https://github.com/DamascenoRafael/mqtt-simulator](https://github.com/DamascenoRafael/mqtt-simulator)
+
+
+<!-- CONTACT -->
+<!-- ## Contact
+
+Your Name - [@twitter_handle](https://twitter.com/twitter_handle) - your.email@example.com
+
+Project Link: [https://github.com/github_username/repo_name](https://github.com/github_username/repo_name)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p> -->
+
+<!-- ACK -->
+## Acknowledgments
+
+Forked from: [mqtt-simulator](https://github.com/DamascenoRafael/mqtt-simulator)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- MARKDOWN LINKS & IMAGES (REFERENCE STYLE) -->
+[contributors-shield]: https://img.shields.io/github/contributors/github_username/repo_name.svg?style=for-the-badge
+[contributors-url]: https://github.com/github_username/repo_name/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/github_username/repo_name.svg?style=for-the-badge
+[forks-url]: https://github.com/github_username/repo_name/network/members
+[stars-shield]: https://img.shields.io/github/stars/github_username/repo_name.svg?style=for-the-badge
+[stars-url]: https://github.com/github_username/repo_name/stargazers
+[issues-shield]: https://img.shields.io/github/issues/github_username/repo_name.svg?style=for-the-badge
+[issues-url]: https://github.com/github_username/repo_name/issues
+[license-shield]: https://img.shields.io/github/license/github_username/repo_name.svg?style=for-the-badge
+[license-url]: https://github.com/github_username/repo_name/blob/master/LICENSE.txt
+[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
+[linkedin-url]: https://linkedin.com/in/linkedin_username
+[product-screenshot]: images/screenshot.png
