@@ -9,7 +9,7 @@ from pydantic import ValidationError
 class Simulator:
     def __init__(self, settings_file: Path):
         self.default_client_settings = ClientSettings(
-            clean=True, retain=False, qos=2, time_interval=10
+            clean=True, retain=False, qos=2, time_interval=10, verbose=False
         )
         self.topics: List[Topic] = []
         self.load_topics(settings_file)
@@ -23,6 +23,7 @@ class Simulator:
             retain=settings_dict.get("retain", default.retain),
             qos=settings_dict.get("qos", default.qos),
             time_interval=settings_dict.get("time_interval", default.time_interval),
+            verbose=settings_dict.get("verbose", default.verbose),
         )
 
     def load_topics(self, settings_file: Path) -> None:
@@ -58,7 +59,6 @@ class Simulator:
                     print(f"Error in topic configuration: {e}")
                 except Exception as e:
                     print(f"Failed to create topic: {e}")
-            print("Topics loaded")
 
         except FileNotFoundError:
             print(f"Settings file not found: {settings_file}")

@@ -12,3 +12,4 @@ class ClientSettings(BaseModel):
     retain: bool
     qos: int
     time_interval: int
+    verbose: bool

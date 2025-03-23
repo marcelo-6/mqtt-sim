@@ -97,11 +97,6 @@ class TopicDataNumber(TopicData):
     )
 
     is_int: bool = False  # Determines if the number is an integer or float
-    # is_int = data["data_type"] == "int"
-    # def __init__(self, data):
-    #     """Initializes the TopicDataNumber instance and determines if the value should be integer or float."""
-    #     super().__init__(data)
-    #     self.is_int = data["data_type"] == "int"  # Determine if the value type is int
 
     def generate_initial_value(self) -> Union[int, float]:
         """Generates the initial value within the defined range.
@@ -158,6 +153,7 @@ class TopicDataBool(TopicData):
 
     def generate_initial_value(self) -> bool:
         """Generates the initial boolean value (True or False)."""
+
         return random.choice([True, False])
 
     def generate_next_value(self) -> bool:
@@ -230,10 +226,6 @@ class TopicDataRawValue(TopicData):
 
 
 class TopicDataMathExpression(TopicData):
-    # def __init__(self, data):
-    #     super().__init__(data)
-    #     self.expression_evaluator = None
-    # expression_evaluator: object = None
     math_expression: str = Field(..., description="List of raw values")
     interval_start: Optional[int] = Field(
         0, description="Starting index for raw values"
@@ -381,18 +373,21 @@ class Topic(threading.Thread):
             time.sleep(self.client_settings.time_interval)
 
     def on_publish(self, client, userdata, mid, result, oneMore):
-        print(f"[{time.strftime('%H:%M:%S')}] Data published on: {self.topic_url}")
+        if self.client_settings.verbose:
+            print(
+                f"[{time.strftime('%H:%M:%S')}] Data published on: {self.topic_url} payload={self.payload}"
+            )
+        else:
+            print(f"[{time.strftime('%H:%M:%S')}] Data published on: {self.topic_url}")
 
     def generate_payload(self) -> dict:
         payload = {}
         payload.update(self.topic_payload_root)
         has_data_active = False
-        print(f"Trying to generate payload for {self.topic_url}")
-        print(f"{self.topic_data=}")
         for data in self.topic_data:
             if data.is_active:
                 has_data_active = True
-                payload.update(data.generate_value())
+                payload[data.name] = data.generate_value()
         if not has_data_active:
             self.disconnect()
             return {}
