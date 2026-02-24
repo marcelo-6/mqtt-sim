@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "brokers": [
+    {
+      "name": "main",
+      "host": "localhost",
+      "port": 1883
+    }
+  ],
+  "streams": [
+    {
+      "name": "spo2_watch_a",
+      "broker": "main",
+      "topic": "wearables/watch-a/spo2",
+      "interval": 1.6,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "spo2_pct",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "int",
+              "min": 92,
+              "max": 100
+            }
+          },
+          {
+            "name": "worn",
+            "generator": {
+              "kind": "choice",
+              "values": [true, true, true, false]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "stress_watch_a",
+      "broker": "main",
+      "topic": "wearables/watch-a/stress",
+      "interval": 1.0,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "stress_score",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "int",
+              "min": 5,
+              "max": 95
+            }
+          },
+          {
+            "name": "state",
+            "generator": {
+              "kind": "choice",
+              "values": ["low", "medium", "high"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "sleep_state_watch_a",
+      "broker": "main",
+      "topic": "wearables/watch-a/sleep",
+      "interval": 5.0,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "stage",
+            "generator": {
+              "kind": "sequence",
+              "values": ["awake", "light", "deep", "rem", "light", "awake"]
+            }
+          },
+          {
+            "name": "session_id",
+            "generator": {
+              "kind": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "activity_watch_a",
+      "broker": "main",
+      "topic": "wearables/watch-a/activity",
+      "interval": 1.2,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "mode",
+            "generator": {
+              "kind": "choice",
+              "values": ["idle", "walk", "run", "cycle"]
+            }
+          },
+          {
+            "name": "pace_min_per_km",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "float",
+              "min": 4.0,
+              "max": 8.5,
+              "precision": 2
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "gps_watch_a",
+      "broker": "main",
+      "topic": "wearables/watch-a/gps",
+      "interval": 1.0,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "speed_mps",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "float",
+              "min": 0,
+              "max": 6.5,
+              "precision": 2
+            }
+          },
+          {
+            "name": "distance_m",
+            "generator": {
+              "kind": "expression",
+              "expression": "(prev or 0) + uniform(0, 4)"
+            }
+          },
+          {
+            "name": "ts",
+            "generator": {
+              "kind": "timestamp",
+              "mode": "unix"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

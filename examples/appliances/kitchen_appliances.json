@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "brokers": [
+    {
+      "name": "main",
+      "host": "localhost",
+      "port": 1883
+    }
+  ],
+  "streams": [
+    {
+      "name": "fridge_main",
+      "broker": "main",
+      "topic": "appliances/kitchen/fridge/main-compartment",
+      "interval": 3.0,
+      "retain": true,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "temp_c",
+            "generator": {
+              "kind": "expression",
+              "expression": "(prev or 3.5) + uniform(-0.15, 0.15)"
+            }
+          },
+          {
+            "name": "door_open",
+            "generator": {
+              "kind": "choice",
+              "values": [false, false, false, true]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "oven_state",
+      "broker": "main",
+      "topic": "appliances/kitchen/oven/state",
+      "interval": 1.5,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "mode",
+            "generator": {
+              "kind": "choice",
+              "values": ["off", "bake", "broil", "preheat"]
+            }
+          },
+          {
+            "name": "setpoint_c",
+            "generator": {
+              "kind": "choice",
+              "values": [0, 160, 180, 200, 220]
+            }
+          },
+          {
+            "name": "cavity_temp_c",
+            "generator": {
+              "kind": "number_walk",
+              "numeric_type": "int",
+              "min": 25,
+              "max": 220,
+              "step": 15,
+              "start": 25
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "dishwasher_cycle",
+      "broker": "main",
+      "topic": "appliances/kitchen/dishwasher/cycle",
+      "interval": 2.0,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "state",
+            "generator": {
+              "kind": "sequence",
+              "values": ["idle", "fill", "wash", "rinse", "dry", "complete"]
+            }
+          },
+          {
+            "name": "minutes_remaining",
+            "generator": {
+              "kind": "number_walk",
+              "numeric_type": "int",
+              "min": 0,
+              "max": 90,
+              "step": 10,
+              "start": 90
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "coffee_machine",
+      "broker": "main",
+      "topic": "appliances/kitchen/coffee-machine/state",
+      "interval": 1.0,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "status",
+            "generator": {
+              "kind": "choice",
+              "values": ["idle", "heating", "brewing", "cleaning"]
+            }
+          },
+          {
+            "name": "water_tank_pct",
+            "generator": {
+              "kind": "number_walk",
+              "numeric_type": "int",
+              "min": 10,
+              "max": 100,
+              "step": 5,
+              "start": 85
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "microwave_state",
+      "broker": "main",
+      "topic": "appliances/kitchen/microwave/state",
+      "interval": 1.2,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "running",
+            "generator": {
+              "kind": "bool_toggle",
+              "start": false
+            }
+          },
+          {
+            "name": "power_level",
+            "generator": {
+              "kind": "choice",
+              "values": ["low", "medium", "high"]
+            }
+          },
+          {
+            "name": "seconds_remaining",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "int",
+              "min": 0,
+              "max": 120
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "brokers": [
+    {
+      "name": "main",
+      "host": "localhost",
+      "port": 1883
+    }
+  ],
+  "streams": [
+    {
+      "name": "image_classifier_result",
+      "broker": "main",
+      "topic": "ml/inference/image-classifier/results",
+      "interval": 0.8,
+      "qos": 1,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {"name": "request_id", "generator": {"kind": "uuid"}},
+          {
+            "name": "label",
+            "generator": {
+              "kind": "choice",
+              "values": ["person", "forklift", "helmet", "box"]
+            }
+          },
+          {
+            "name": "confidence",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "float",
+              "min": 0.55,
+              "max": 0.99,
+              "precision": 3
+            }
+          },
+          {
+            "name": "model_version",
+            "generator": {
+              "kind": "choice",
+              "values": ["vision-2.4.1", "vision-2.4.2"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "latency_metrics",
+      "broker": "main",
+      "topic": "ml/inference/image-classifier/latency",
+      "interval": 0.8,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "latency_ms",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "int",
+              "min": 12,
+              "max": 140
+            }
+          },
+          {
+            "name": "queue_depth",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "int",
+              "min": 0,
+              "max": 25
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "routing_decision",
+      "broker": "main",
+      "topic": "ml/inference/router/decision",
+      "interval": 1.2,
+      "retain": true,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "route",
+            "generator": {
+              "kind": "choice",
+              "values": ["prod", "prod", "prod", "canary"]
+            }
+          },
+          {
+            "name": "node",
+            "generator": {
+              "kind": "choice",
+              "values": ["gpu-a", "gpu-b", "gpu-c"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "inference_status",
+      "broker": "main",
+      "topic": "ml/inference/image-classifier/status",
+      "interval": 1.5,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "ok",
+            "generator": {
+              "kind": "choice",
+              "values": [true, true, true, true, false]
+            }
+          },
+          {
+            "name": "error_type",
+            "generator": {
+              "kind": "choice",
+              "values": ["none", "none", "timeout", "decode_error"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "batch_summary_event",
+      "broker": "main",
+      "topic": "ml/inference/image-classifier/batch-summary",
+      "interval": 3.0,
+      "payload": {
+        "kind": "sequence",
+        "encoding": "json",
+        "items": [
+          {"window_s": 5, "requests": 128, "errors": 0},
+          {"window_s": 5, "requests": 132, "errors": 1},
+          {"window_s": 5, "requests": 125, "errors": 0}
+        ]
+      }
+    }
+  ]
+}

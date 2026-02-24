@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "brokers": [
+    {
+      "name": "main",
+      "host": "localhost",
+      "port": 1883
+    }
+  ],
+  "streams": [
+    {
+      "name": "file_metadata",
+      "broker": "main",
+      "topic": "file-transfer/dropbox/events/metadata",
+      "interval": 2.0,
+      "qos": 1,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {"name": "transfer_id", "generator": {"kind": "uuid"}},
+          {
+            "name": "filename",
+            "generator": {
+              "kind": "choice",
+              "values": ["batch_001.csv", "batch_002.csv", "batch_003.csv"]
+            }
+          },
+          {
+            "name": "size_bytes",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "int",
+              "min": 4096,
+              "max": 65536
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "transfer_status",
+      "broker": "main",
+      "topic": "file-transfer/dropbox/events/status",
+      "interval": 1.2,
+      "retain": true,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "state",
+            "generator": {
+              "kind": "sequence",
+              "values": ["queued", "starting", "transferring", "verifying", "complete"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "checksum_event",
+      "broker": "main",
+      "topic": "file-transfer/dropbox/events/checksum",
+      "interval": 2.5,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "algorithm",
+            "generator": {
+              "kind": "choice",
+              "values": ["sha256", "md5"]
+            }
+          },
+          {
+            "name": "checksum",
+            "generator": {
+              "kind": "choice",
+              "values": [
+                "9b74c9897bac770ffc029102a200c5de",
+                "a54d88e06612d820bc3be72877c74f257b561b19"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "retry_counter",
+      "broker": "main",
+      "topic": "file-transfer/dropbox/events/retries",
+      "interval": 1.0,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "retries",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "int",
+              "min": 0,
+              "max": 3
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "completion_event",
+      "broker": "main",
+      "topic": "file-transfer/dropbox/events/completion",
+      "interval": 3.0,
+      "payload": {
+        "kind": "sequence",
+        "encoding": "json",
+        "items": [
+          {"status": "success", "duration_s": 3.4},
+          {"status": "success", "duration_s": 2.9},
+          {"status": "failed", "duration_s": 4.8, "reason": "checksum_mismatch"}
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "brokers": [
+    {
+      "name": "main",
+      "host": "localhost",
+      "port": 1883
+    }
+  ],
+  "streams": [
+    {
+      "name": "bioreactor_temperature",
+      "broker": "main",
+      "topic": "pharma/bioreactor-01/core/temperature",
+      "interval": 1.0,
+      "qos": 1,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "temp_c",
+            "generator": {
+              "kind": "expression",
+              "expression": "(prev or 37.0) + uniform(-0.08, 0.08)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "bioreactor_ph",
+      "broker": "main",
+      "topic": "pharma/bioreactor-01/core/ph",
+      "interval": 1.2,
+      "qos": 1,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "ph",
+            "generator": {
+              "kind": "expression",
+              "expression": "(prev or 7.1) + uniform(-0.03, 0.03)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "bioreactor_do",
+      "broker": "main",
+      "topic": "pharma/bioreactor-01/core/do",
+      "interval": 1.1,
+      "qos": 1,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "do_pct",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "float",
+              "min": 25,
+              "max": 75,
+              "precision": 1
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "agitator_rpm",
+      "broker": "main",
+      "topic": "pharma/bioreactor-01/core/agitation",
+      "interval": 0.9,
+      "qos": 1,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "rpm",
+            "generator": {
+              "kind": "number_walk",
+              "numeric_type": "int",
+              "min": 80,
+              "max": 180,
+              "step": 10,
+              "start": 120
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "bioreactor_state_machine",
+      "broker": "main",
+      "topic": "pharma/bioreactor-01/state-machine",
+      "interval": 2.0,
+      "retain": true,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "state",
+            "generator": {
+              "kind": "sequence",
+              "values": ["idle", "prep", "inoculation", "growth", "harvest", "cip"]
+            }
+          },
+          {
+            "name": "campaign_id",
+            "generator": {
+              "kind": "uuid"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

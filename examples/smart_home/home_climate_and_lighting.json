@@ -1,0 +1,185 @@
+{
+  "schema_version": 1,
+  "brokers": [
+    {
+      "name": "main",
+      "host": "localhost",
+      "port": 1883
+    }
+  ],
+  "streams": [
+    {
+      "name": "thermostat_living_room",
+      "broker": "main",
+      "topic": "smart-home/thermostat/living-room/state",
+      "interval": 2.0,
+      "retain": true,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "mode",
+            "generator": {
+              "kind": "choice",
+              "values": ["heat", "cool", "auto", "idle"]
+            }
+          },
+          {
+            "name": "setpoint_c",
+            "generator": {
+              "kind": "number_walk",
+              "numeric_type": "float",
+              "min": 20,
+              "max": 24,
+              "step": 0.5,
+              "start": 21
+            }
+          },
+          {
+            "name": "ambient_c",
+            "generator": {
+              "kind": "expression",
+              "expression": "(prev or 21.2) + uniform(-0.2, 0.2)"
+            }
+          },
+          {
+            "name": "ts",
+            "generator": {
+              "kind": "timestamp",
+              "mode": "iso"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "light_living_room",
+      "broker": "main",
+      "topic": "smart-home/lights/living-room/state",
+      "interval": 1.0,
+      "retain": true,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "on",
+            "generator": {
+              "kind": "bool_toggle",
+              "start": true
+            }
+          },
+          {
+            "name": "brightness_pct",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "int",
+              "min": 15,
+              "max": 100
+            }
+          },
+          {
+            "name": "scene",
+            "generator": {
+              "kind": "choice",
+              "values": ["relax", "reading", "movie", "off"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "light_bedroom",
+      "broker": "main",
+      "topic": "smart-home/lights/bedroom/state",
+      "interval": 1.5,
+      "retain": true,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "on",
+            "generator": {
+              "kind": "bool_toggle",
+              "start": false
+            }
+          },
+          {
+            "name": "brightness_pct",
+            "generator": {
+              "kind": "number_walk",
+              "numeric_type": "int",
+              "min": 0,
+              "max": 80,
+              "step": 20,
+              "start": 20
+            }
+          },
+          {
+            "name": "color_temp_k",
+            "generator": {
+              "kind": "choice",
+              "values": [2700, 3000, 3500, 4000]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "humidity_living_room",
+      "broker": "main",
+      "topic": "smart-home/sensors/living-room/humidity",
+      "interval": 3.0,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "relative_humidity_pct",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "float",
+              "min": 35,
+              "max": 55,
+              "precision": 1
+            }
+          },
+          {
+            "name": "battery_pct",
+            "generator": {
+              "kind": "number_walk",
+              "numeric_type": "int",
+              "min": 60,
+              "max": 100,
+              "step": 1,
+              "start": 100
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "occupancy_entryway",
+      "broker": "main",
+      "topic": "smart-home/sensors/entryway/occupancy",
+      "interval": 0.8,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "occupied",
+            "generator": {
+              "kind": "choice",
+              "values": [true, false, false, false]
+            }
+          },
+          {
+            "name": "motion_count",
+            "generator": {
+              "kind": "expression",
+              "expression": "(prev or 0) + randint(0, 2)"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

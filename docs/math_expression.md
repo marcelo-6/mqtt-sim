@@ -191,7 +191,7 @@ Tips:
 - validate the full config first:
 
 ```shell
-uv run mqtt-sim validate -c examples/new/basic.json
+uv run mqtt-sim validate -c examples/basic.json
 ```
 
 Note: `validate` checks schema structure, but expression execution errors appear during `run`.
