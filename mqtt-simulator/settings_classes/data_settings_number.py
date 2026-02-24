@@ -16,7 +16,7 @@ class DataSettingsNumber(DataSettings):
     @computed_field
     @property
     def is_int(self) -> bool:
-        return self.type == "INT"
+        return self.type.lower() == "int"
 
     def is_old_value_on_boundary(self) -> bool:
         return self.get_old_value() == self.min_value or self.get_old_value() == self.max_value
