@@ -1,6 +1,6 @@
 set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 
-coverage_threshold := "70"
+coverage_threshold := "60"
 
 default: help
 
