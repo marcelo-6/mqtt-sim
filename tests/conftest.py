@@ -3,7 +3,6 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parent.parent
 SRC_DIR = ROOT / "src"
 LEGACY_DIR = ROOT / "mqtt-simulator"

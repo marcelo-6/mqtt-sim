@@ -19,4 +19,10 @@ def test_simulator_validation_error_shapes_location_and_input() -> None:
 
     errors = err.errors()
 
-    assert errors == [{"msg": "Input should be a valid topic type", "loc": "TYPE", "input": "bad_type"}]
+    assert errors == [
+        {
+            "msg": "Input should be a valid topic type",
+            "loc": "TYPE",
+            "input": "bad_type",
+        }
+    ]
