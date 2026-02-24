@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "brokers": [
+    {
+      "name": "main",
+      "host": "localhost",
+      "port": 1883
+    }
+  ],
+  "streams": [
+    {
+      "name": "station_state_machine",
+      "broker": "main",
+      "topic": "industrial/line-1/station-3/state-machine",
+      "interval": 0.9,
+      "retain": true,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "state",
+            "generator": {
+              "kind": "sequence",
+              "values": ["idle", "load", "process", "inspect", "unload"]
+            }
+          },
+          {
+            "name": "step",
+            "generator": {
+              "kind": "expression",
+              "expression": "(prev or 0) + 1"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "cycle_time",
+      "broker": "main",
+      "topic": "industrial/line-1/station-3/cycle-time",
+      "interval": 0.9,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "cycle_time_s",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "float",
+              "min": 7.2,
+              "max": 10.8,
+              "precision": 2
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "reject_count",
+      "broker": "main",
+      "topic": "industrial/line-1/station-3/rejects",
+      "interval": 1.5,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "count",
+            "generator": {
+              "kind": "expression",
+              "expression": "(prev or 0) + randint(0, 1)"
+            }
+          },
+          {
+            "name": "reason",
+            "generator": {
+              "kind": "choice",
+              "values": ["none", "vision", "dimension", "presence"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "throughput",
+      "broker": "main",
+      "topic": "industrial/line-1/station-3/throughput",
+      "interval": 2.0,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "parts_per_min",
+            "generator": {
+              "kind": "number_walk",
+              "numeric_type": "int",
+              "min": 12,
+              "max": 26,
+              "step": 2,
+              "start": 18
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "alarm_events",
+      "broker": "main",
+      "topic": "industrial/line-1/station-3/alarms",
+      "interval": 3.0,
+      "payload": {
+        "kind": "sequence",
+        "encoding": "json",
+        "items": [
+          {"alarm": false, "code": "NONE"},
+          {"alarm": true, "code": "E112", "message": "Sensor timeout"},
+          {"alarm": false, "code": "NONE"},
+          {"alarm": true, "code": "E204", "message": "Guard open"}
+        ]
+      }
+    }
+  ]
+}

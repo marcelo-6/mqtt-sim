@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "brokers": [
+    {
+      "name": "main",
+      "host": "localhost",
+      "port": 1883
+    }
+  ],
+  "streams": [
+    {
+      "name": "washer_cycle",
+      "broker": "main",
+      "topic": "appliances/laundry/washer/cycle",
+      "interval": 1.8,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "state",
+            "generator": {
+              "kind": "sequence",
+              "values": ["idle", "fill", "wash", "rinse", "spin", "complete"]
+            }
+          },
+          {
+            "name": "minutes_remaining",
+            "generator": {
+              "kind": "number_walk",
+              "numeric_type": "int",
+              "min": 0,
+              "max": 70,
+              "step": 7,
+              "start": 70
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "washer_vibration",
+      "broker": "main",
+      "topic": "appliances/laundry/washer/vibration",
+      "interval": 0.7,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "rms_g",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "float",
+              "min": 0.01,
+              "max": 0.8,
+              "precision": 3
+            }
+          },
+          {
+            "name": "imbalance",
+            "generator": {
+              "kind": "choice",
+              "values": ["none", "minor", "major"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "dryer_cycle",
+      "broker": "main",
+      "topic": "appliances/laundry/dryer/cycle",
+      "interval": 2.0,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "state",
+            "generator": {
+              "kind": "sequence",
+              "values": ["idle", "heating", "drying", "cooldown", "complete"]
+            }
+          },
+          {
+            "name": "minutes_remaining",
+            "generator": {
+              "kind": "number_walk",
+              "numeric_type": "int",
+              "min": 0,
+              "max": 60,
+              "step": 6,
+              "start": 60
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "dryer_temp",
+      "broker": "main",
+      "topic": "appliances/laundry/dryer/temperature",
+      "interval": 1.0,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "air_temp_c",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "float",
+              "min": 30,
+              "max": 78,
+              "precision": 1
+            }
+          },
+          {
+            "name": "heater_on",
+            "generator": {
+              "kind": "bool_toggle",
+              "start": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "leak_sensor",
+      "broker": "main",
+      "topic": "appliances/laundry/leak-sensor/state",
+      "interval": 2.5,
+      "retain": true,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "leak_detected",
+            "generator": {
+              "kind": "choice",
+              "values": [false, false, false, false, true]
+            }
+          },
+          {
+            "name": "battery_pct",
+            "generator": {
+              "kind": "number_walk",
+              "numeric_type": "int",
+              "min": 30,
+              "max": 100,
+              "step": 1,
+              "start": 95
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "brokers": [
+    {
+      "name": "main",
+      "host": "localhost",
+      "port": 1883
+    }
+  ],
+  "streams": [
+    {
+      "name": "inline_bytes_utf8",
+      "broker": "main",
+      "topic": "file-transfer/binary/inline-utf8",
+      "interval": 2.0,
+      "payload": {
+        "kind": "bytes",
+        "value": "hello-from-utf8",
+        "encoding": "utf8"
+      }
+    },
+    {
+      "name": "inline_bytes_hex",
+      "broker": "main",
+      "topic": "file-transfer/binary/inline-hex",
+      "interval": 2.0,
+      "payload": {
+        "kind": "bytes",
+        "value": "48656c6c6f2d66726f6d2d686578",
+        "encoding": "hex"
+      }
+    },
+    {
+      "name": "inline_bytes_base64",
+      "broker": "main",
+      "topic": "file-transfer/binary/inline-base64",
+      "interval": 2.0,
+      "payload": {
+        "kind": "bytes",
+        "value": "SGVsbG8tZnJvbS1iYXNlNjQ=",
+        "encoding": "base64"
+      }
+    },
+    {
+      "name": "file_payload_raw",
+      "broker": "main",
+      "topic": "file-transfer/binary/file",
+      "interval": 2.0,
+      "payload": {
+        "kind": "file",
+        "path": "../data/sample.bin"
+      }
+    },
+    {
+      "name": "pickle_payload_raw",
+      "broker": "main",
+      "topic": "file-transfer/binary/pickle",
+      "interval": 2.0,
+      "payload": {
+        "kind": "pickle_file",
+        "path": "../data/sample.pkl"
+      }
+    }
+  ]
+}

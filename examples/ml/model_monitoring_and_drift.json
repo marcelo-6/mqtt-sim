@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "brokers": [
+    {
+      "name": "main",
+      "host": "localhost",
+      "port": 1883
+    }
+  ],
+  "streams": [
+    {
+      "name": "drift_score",
+      "broker": "main",
+      "topic": "ml/monitoring/drift/score",
+      "interval": 2.0,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "psi_score",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "float",
+              "min": 0.01,
+              "max": 0.45,
+              "precision": 3
+            }
+          },
+          {
+            "name": "severity",
+            "generator": {
+              "kind": "choice",
+              "values": ["low", "low", "medium", "high"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "feature_stats",
+      "broker": "main",
+      "topic": "ml/monitoring/features/summary",
+      "interval": 2.5,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "feature_mean",
+            "generator": {
+              "kind": "expression",
+              "expression": "(prev or 0.42) + uniform(-0.02, 0.02)"
+            }
+          },
+          {
+            "name": "feature_std",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "float",
+              "min": 0.05,
+              "max": 0.18,
+              "precision": 3
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "prediction_distribution",
+      "broker": "main",
+      "topic": "ml/monitoring/prediction/distribution",
+      "interval": 1.5,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "top_class",
+            "generator": {
+              "kind": "choice",
+              "values": ["ok", "warning", "fault-a", "fault-b"]
+            }
+          },
+          {
+            "name": "top_class_ratio",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "float",
+              "min": 0.3,
+              "max": 0.95,
+              "precision": 3
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "route_mix",
+      "broker": "main",
+      "topic": "ml/monitoring/router/mix",
+      "interval": 1.8,
+      "retain": true,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "route",
+            "generator": {
+              "kind": "choice",
+              "values": ["prod", "prod", "canary"]
+            }
+          },
+          {
+            "name": "canary_pct",
+            "generator": {
+              "kind": "choice",
+              "values": [5, 10, 15, 20]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "alert_state",
+      "broker": "main",
+      "topic": "ml/monitoring/alerts/state",
+      "interval": 3.0,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "active",
+            "generator": {
+              "kind": "choice",
+              "values": [false, false, true]
+            }
+          },
+          {
+            "name": "alert_code",
+            "generator": {
+              "kind": "choice",
+              "values": ["NONE", "NONE", "DRIFT_WARN", "LATENCY_HIGH"]
+            }
+          },
+          {
+            "name": "ts",
+            "generator": {
+              "kind": "timestamp",
+              "mode": "iso"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

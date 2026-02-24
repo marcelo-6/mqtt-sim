@@ -17,20 +17,20 @@ Quick Navigation:
 
 Start with the shipped examples:
 
-- [`examples/new/basic.json`](../examples/new/basic.json)
-- [`examples/new/many_streams.json`](../examples/new/many_streams.json)
-- [`examples/new/pickle_file.json`](../examples/new/pickle_file.json)
+- [`examples/basic.json`](../examples/basic.json)
+- [`examples/many_streams.json`](../examples/many_streams.json)
+- [`examples/pickle_file.json`](../examples/pickle_file.json)
 
 Validate a config without connecting to a broker:
 
 ```shell
-uv run mqtt-sim validate -c examples/new/basic.json
+uv run mqtt-sim validate -c examples/basic.json
 ```
 
 Run the simulator:
 
 ```shell
-uv run mqtt-sim run -c examples/new/basic.json
+uv run mqtt-sim run -c examples/basic.json
 ```
 
 Minimal example:
@@ -550,9 +550,9 @@ Invalid list/range settings:
 Validate examples:
 
 ```shell
-uv run mqtt-sim validate -c examples/new/basic.json
-uv run mqtt-sim validate -c examples/new/many_streams.json
-uv run mqtt-sim validate -c examples/new/pickle_file.json
+uv run mqtt-sim validate -c examples/basic.json
+uv run mqtt-sim validate -c examples/many_streams.json
+uv run mqtt-sim validate -c examples/pickle_file.json
 ```
 
 Inspect CLI help:
@@ -575,4 +575,3 @@ The implementation is focused and does not currently include:
 - Cartesian or nested stream expansion (one `expand` spec per stream)
 - Plugin system for custom generators
 - Iinteractive table controls (sorting/filtering/hotkeys)
-

@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "brokers": [
+    {
+      "name": "main",
+      "host": "localhost",
+      "port": 1883
+    }
+  ],
+  "streams": [
+    {
+      "name": "front_door_lock",
+      "broker": "main",
+      "topic": "smart-home/security/front-door-lock/state",
+      "interval": 1.2,
+      "retain": true,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "locked",
+            "generator": {
+              "kind": "choice",
+              "values": [true, true, true, false]
+            }
+          },
+          {
+            "name": "battery_pct",
+            "generator": {
+              "kind": "number_walk",
+              "numeric_type": "int",
+              "min": 40,
+              "max": 100,
+              "step": 1,
+              "start": 98
+            }
+          },
+          {
+            "name": "last_user",
+            "generator": {
+              "kind": "choice",
+              "values": ["alice", "bob", "cleaner", "none"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "garage_door",
+      "broker": "main",
+      "topic": "smart-home/security/garage-door/state",
+      "interval": 1.5,
+      "retain": true,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "state",
+            "generator": {
+              "kind": "sequence",
+              "values": ["closed", "opening", "open", "closing", "closed"]
+            }
+          },
+          {
+            "name": "position_pct",
+            "generator": {
+              "kind": "number_walk",
+              "numeric_type": "int",
+              "min": 0,
+              "max": 100,
+              "step": 25,
+              "start": 0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "hall_motion",
+      "broker": "main",
+      "topic": "smart-home/security/hall-motion/event",
+      "interval": 0.6,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "motion",
+            "generator": {
+              "kind": "choice",
+              "values": [false, false, false, true]
+            }
+          },
+          {
+            "name": "lux",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "int",
+              "min": 5,
+              "max": 280
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "doorbell_events",
+      "broker": "main",
+      "topic": "smart-home/security/doorbell/event",
+      "interval": 2.5,
+      "payload": {
+        "kind": "sequence",
+        "encoding": "json",
+        "items": [
+          {"event": "idle", "pressed": false},
+          {"event": "ring", "pressed": true, "by": "visitor"},
+          {"event": "idle", "pressed": false},
+          {"event": "motion", "pressed": false}
+        ]
+      }
+    },
+    {
+      "name": "window_contact_kitchen",
+      "broker": "main",
+      "topic": "smart-home/security/window-contact/kitchen",
+      "interval": 1.7,
+      "retain": true,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "open",
+            "generator": {
+              "kind": "bool_toggle",
+              "start": false
+            }
+          },
+          {
+            "name": "tamper",
+            "generator": {
+              "kind": "choice",
+              "values": [false, false, false, false, true]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

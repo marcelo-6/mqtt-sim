@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "brokers": [
+    {
+      "name": "main",
+      "host": "localhost",
+      "port": 1883
+    }
+  ],
+  "streams": [
+    {
+      "name": "zone_environment",
+      "broker": "main",
+      "topic": "industrial/site-a/zone-{zone}/environment",
+      "interval": 1.2,
+      "expand": {
+        "kind": "range",
+        "var": "zone",
+        "start": 1,
+        "stop": 5
+      },
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "zone",
+            "generator": {
+              "kind": "const",
+              "value": "zone-{zone}"
+            }
+          },
+          {
+            "name": "temp_c",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "float",
+              "min": 18,
+              "max": 30,
+              "precision": 1
+            }
+          },
+          {
+            "name": "humidity_pct",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "float",
+              "min": 30,
+              "max": 70,
+              "precision": 1
+            }
+          },
+          {
+            "name": "pressure_kpa",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "float",
+              "min": 98,
+              "max": 103,
+              "precision": 2
+            }
+          },
+          {
+            "name": "noise_db",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "float",
+              "min": 48,
+              "max": 82,
+              "precision": 1
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

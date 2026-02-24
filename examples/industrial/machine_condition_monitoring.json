@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "brokers": [
+    {
+      "name": "main",
+      "host": "localhost",
+      "port": 1883
+    }
+  ],
+  "streams": [
+    {
+      "name": "motor_vibration",
+      "broker": "main",
+      "topic": "industrial/machine-a/condition/vibration",
+      "interval": 0.5,
+      "qos": 1,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "velocity_mm_s",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "float",
+              "min": 0.3,
+              "max": 7.5,
+              "precision": 2
+            }
+          },
+          {
+            "name": "severity",
+            "generator": {
+              "kind": "choice",
+              "values": ["normal", "watch", "warning"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "bearing_temperature",
+      "broker": "main",
+      "topic": "industrial/machine-a/condition/bearing-temp",
+      "interval": 1.0,
+      "qos": 1,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "temp_c",
+            "generator": {
+              "kind": "expression",
+              "expression": "(prev or 62.0) + uniform(-0.4, 0.6)"
+            }
+          },
+          {
+            "name": "alarm",
+            "generator": {
+              "kind": "choice",
+              "values": [false, false, false, true]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "shaft_rpm",
+      "broker": "main",
+      "topic": "industrial/machine-a/condition/shaft-rpm",
+      "interval": 0.7,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "rpm",
+            "generator": {
+              "kind": "number_walk",
+              "numeric_type": "int",
+              "min": 1400,
+              "max": 1800,
+              "step": 50,
+              "start": 1600
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "power_draw",
+      "broker": "main",
+      "topic": "industrial/machine-a/condition/power",
+      "interval": 0.8,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "kw",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "float",
+              "min": 3.5,
+              "max": 7.8,
+              "precision": 2
+            }
+          },
+          {
+            "name": "power_factor",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "float",
+              "min": 0.84,
+              "max": 0.99,
+              "precision": 3
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "machine_state",
+      "broker": "main",
+      "topic": "industrial/machine-a/state-machine",
+      "interval": 1.5,
+      "retain": true,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "state",
+            "generator": {
+              "kind": "sequence",
+              "values": ["idle", "starting", "running", "running", "stopping"]
+            }
+          },
+          {
+            "name": "batch_id",
+            "generator": {
+              "kind": "uuid"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

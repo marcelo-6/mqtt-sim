@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "brokers": [
+    {
+      "name": "main",
+      "host": "localhost",
+      "port": 1883
+    }
+  ],
+  "streams": [
+    {
+      "name": "session_start",
+      "broker": "main",
+      "topic": "file-transfer/chunked/session/start",
+      "interval": 5.0,
+      "qos": 1,
+      "payload": {
+        "kind": "sequence",
+        "encoding": "json",
+        "items": [
+          {"session": "s-1001", "event": "start", "chunks": 4},
+          {"session": "s-1002", "event": "start", "chunks": 4},
+          {"session": "s-1003", "event": "start", "chunks": 4}
+        ]
+      }
+    },
+    {
+      "name": "chunk_metadata",
+      "broker": "main",
+      "topic": "file-transfer/chunked/session/chunk-meta",
+      "interval": 1.0,
+      "qos": 1,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "chunk_index",
+            "generator": {
+              "kind": "sequence",
+              "values": [1, 2, 3, 4]
+            }
+          },
+          {
+            "name": "chunk_size_bytes",
+            "generator": {
+              "kind": "const",
+              "value": 256
+            }
+          },
+          {
+            "name": "ts",
+            "generator": {
+              "kind": "timestamp",
+              "mode": "unix"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "chunk_payload_bytes",
+      "broker": "main",
+      "topic": "file-transfer/chunked/session/chunk-bytes",
+      "interval": 1.0,
+      "qos": 1,
+      "payload": {
+        "kind": "file",
+        "path": "../data/firmware_chunk_001.bin"
+      }
+    },
+    {
+      "name": "chunk_ack",
+      "broker": "main",
+      "topic": "file-transfer/chunked/session/ack",
+      "interval": 1.0,
+      "payload": {
+        "kind": "sequence",
+        "encoding": "json",
+        "items": [
+          {"chunk": 1, "ack": true},
+          {"chunk": 2, "ack": true},
+          {"chunk": 3, "ack": true},
+          {"chunk": 4, "ack": true}
+        ]
+      }
+    },
+    {
+      "name": "session_complete",
+      "broker": "main",
+      "topic": "file-transfer/chunked/session/complete",
+      "interval": 5.0,
+      "retain": true,
+      "payload": {
+        "kind": "text",
+        "value": "transfer-complete"
+      }
+    }
+  ]
+}

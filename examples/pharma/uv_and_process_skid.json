@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "brokers": [
+    {
+      "name": "main",
+      "host": "localhost",
+      "port": 1883
+    }
+  ],
+  "streams": [
+    {
+      "name": "uv_absorbance",
+      "broker": "main",
+      "topic": "pharma/skid-b/analytics/uv",
+      "interval": 1.0,
+      "qos": 1,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "uv_au",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "float",
+              "min": 0.01,
+              "max": 1.5,
+              "precision": 3
+            }
+          },
+          {
+            "name": "wavelength_nm",
+            "generator": {
+              "kind": "const",
+              "value": 280
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "process_temp",
+      "broker": "main",
+      "topic": "pharma/skid-b/process/temperature",
+      "interval": 1.1,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "temp_c",
+            "generator": {
+              "kind": "expression",
+              "expression": "(prev or 22.5) + uniform(-0.1, 0.1)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "process_flow_rate",
+      "broker": "main",
+      "topic": "pharma/skid-b/process/flow-rate",
+      "interval": 0.9,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "flow_lpm",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "float",
+              "min": 1.0,
+              "max": 12.0,
+              "precision": 2
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "skid_a_status",
+      "broker": "main",
+      "topic": "pharma/skid-a/state-machine",
+      "interval": 2.0,
+      "retain": true,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "state",
+            "generator": {
+              "kind": "sequence",
+              "values": ["idle", "setup", "running", "running", "hold"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "skid_b_status",
+      "broker": "main",
+      "topic": "pharma/skid-b/state-machine",
+      "interval": 2.0,
+      "retain": true,
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "state",
+            "generator": {
+              "kind": "sequence",
+              "values": ["idle", "setup", "running", "alarm", "recover"]
+            }
+          },
+          {
+            "name": "code",
+            "generator": {
+              "kind": "choice",
+              "values": ["NONE", "NONE", "P102", "V205"]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "brokers": [
+    {
+      "name": "main",
+      "host": "localhost",
+      "port": 1883
+    }
+  ],
+  "streams": [
+    {
+      "name": "fitness_tracker_stream",
+      "broker": "main",
+      "topic": "wearables/{device}/fitness",
+      "interval": 1.0,
+      "expand": {
+        "kind": "list",
+        "var": "device",
+        "values": ["ft-001", "ft-002", "ft-003", "ft-004", "ft-005"]
+      },
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "device_id",
+            "generator": {
+              "kind": "const",
+              "value": "{device}"
+            }
+          },
+          {
+            "name": "heart_rate_bpm",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "int",
+              "min": 58,
+              "max": 165
+            }
+          },
+          {
+            "name": "steps",
+            "generator": {
+              "kind": "expression",
+              "expression": "(prev or 0) + randint(0, 18)"
+            }
+          },
+          {
+            "name": "calories_kcal",
+            "generator": {
+              "kind": "expression",
+              "expression": "(prev or 0) + uniform(0, 1.5)"
+            }
+          },
+          {
+            "name": "battery_pct",
+            "generator": {
+              "kind": "number_walk",
+              "numeric_type": "int",
+              "min": 20,
+              "max": 100,
+              "step": 1,
+              "start": 100
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
