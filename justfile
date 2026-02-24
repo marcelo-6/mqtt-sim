@@ -30,3 +30,11 @@ ci-check threshold=coverage_threshold:
 
 clean:
     rm -rf .pytest_cache .ruff_cache htmlcov .coverage .coverage.*
+
+# Generate a gif for every example json file
+vhs-example-gifs:
+    test -x scripts/generate-all-examples.sh || chmod +x scripts/generate-all-examples.sh
+    ./scripts/generate-all-examples.sh
+
+vhs-main-gif:
+    vhs scripts/cli-gif-gen.tape
