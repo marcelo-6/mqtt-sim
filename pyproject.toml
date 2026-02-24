@@ -1,10 +1,47 @@
 [project]
 name = "mqtt-simulator"
 version = "0.1.0"
-description = "A lightweight, easy-to-configure MQTT simulator written in Python 3 for publishing JSON objects to a broker, simulating sensors and devices."
+description = "A MQTT simulator for publishing to a broker by simulating sensors, devices, senarios."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "paho-mqtt==2.1.0",
     "pydantic==2.11.5",
+    "typer>=0.16.0,<1.0.0",
 ]
+
+[project.scripts]
+mqtt-sim = "mqtt_simulator.cli:app"
+
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mqtt_simulator"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.4,<9.0.0",
+    "pytest-cov>=6.0.0,<7.0.0",
+    "ruff>=0.9.0,<1.0.0",
+]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["src/mqtt_simulator"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
