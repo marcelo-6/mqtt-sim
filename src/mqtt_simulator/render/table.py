@@ -2,18 +2,17 @@
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass, field
 from datetime import datetime
-import time
-from typing import TextIO, Iterable
+from typing import TextIO
 
+from rich import box
 from rich.console import Console, RenderableType
 from rich.live import Live
+from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
-from rich import box
-from rich.panel import Panel
-
 
 # Common-ish states sample
 _STATE_BADGES: dict[str, tuple[str, str]] = {
@@ -40,7 +39,8 @@ class TableRenderer:
 
     def __post_init__(self) -> None:
         """Create the console and initialize live rendering state."""
-        # Let Rich auto-detect color/TTY; your CLI can pick this renderer only when isatty() is true.
+        # Let Rich auto-detect color/TTY;
+        # CLI can pick this renderer only when isatty() is true.
         self._console = Console(file=self.stream, highlight=False)
 
     def start(self, snapshot) -> None:
