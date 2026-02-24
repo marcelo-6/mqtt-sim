@@ -18,7 +18,10 @@ jobs:
         uses: astral-sh/setup-uv@v7
 
       - name: Install just
-        uses: taiki-e/install-action@just
+        uses: taiki-e/cache-cargo-install-action@v3
+        with:
+          tool: just
+
 
       - name: Sync dependencies (including dev)
         run: just install
