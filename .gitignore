@@ -126,3 +126,6 @@ dmypy.json
 
 # secrets should be tracked
 secrets/
+
+# ignore for vhs
+ttyd/
