@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "brokers": [
+    {
+      "name": "main",
+      "host": "localhost",
+      "port": 1883
+    }
+  ],
+  "streams": [
+    {
+      "broker": "main",
+      "topic": "binary/pickle/demo",
+      "interval": 2.0,
+      "payload": {
+        "kind": "pickle_file",
+        "path": "data/sample.pkl"
+      }
+    }
+  ]
+}

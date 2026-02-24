@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "brokers": [
+    {
+      "name": "main",
+      "host": "localhost",
+      "port": 1883
+    }
+  ],
+  "streams": [
+    {
+      "broker": "main",
+      "topic": "site/{site}/rack/telemetry",
+      "interval": 0.5,
+      "expand": {
+        "kind": "list",
+        "var": "site",
+        "values": ["north", "south", "west"]
+      },
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "voltage",
+            "generator": {
+              "kind": "number_walk",
+              "numeric_type": "float",
+              "min": 110,
+              "max": 125,
+              "step": 0.5
+            }
+          },
+          {
+            "name": "stamp",
+            "generator": {
+              "kind": "timestamp",
+              "mode": "iso"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "broker": "main",
+      "topic": "replay/{id}",
+      "interval": 0.25,
+      "expand": {
+        "kind": "range",
+        "var": "id",
+        "start": 1,
+        "stop": 10
+      },
+      "payload": {
+        "kind": "sequence",
+        "encoding": "text",
+        "loop": true,
+        "items": ["ON", "OFF", "WARN"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "brokers": [
+    {
+      "name": "main",
+      "host": "localhost",
+      "port": 1883
+    }
+  ],
+  "streams": [
+    {
+      "broker": "main",
+      "topic": "devices/{id}/status",
+      "interval": 1.0,
+      "expand": {
+        "kind": "range",
+        "var": "id",
+        "start": 1,
+        "stop": 3
+      },
+      "payload": {
+        "kind": "json_fields",
+        "fields": [
+          {
+            "name": "ok",
+            "generator": {
+              "kind": "bool_toggle",
+              "start": true
+            }
+          },
+          {
+            "name": "temperature",
+            "generator": {
+              "kind": "number_random",
+              "numeric_type": "float",
+              "min": 18,
+              "max": 32,
+              "precision": 1
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
