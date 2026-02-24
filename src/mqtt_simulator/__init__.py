@@ -1,4 +1,4 @@
-"""MQTT Simulator v2 package bootstrap."""
+"""Package metadata for the MQTT simulator."""
 
 __all__ = ["__version__"]
 
