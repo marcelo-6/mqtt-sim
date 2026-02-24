@@ -1,9 +1,10 @@
-"""Import-safe module entrypoint."""
+"""Module entrypoint."""
 
 from .cli import app
 
 
 def main() -> None:
+    """Run the CLI application."""
     app()
 
 

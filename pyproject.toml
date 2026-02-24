@@ -7,6 +7,7 @@ requires-python = ">=3.13"
 dependencies = [
     "paho-mqtt==2.1.0",
     "pydantic==2.12.5",
+    "rich>=14.2.0",
     "typer>=0.24.1",
 ]
 
