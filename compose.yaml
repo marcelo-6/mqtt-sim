@@ -1,0 +1,37 @@
+services:
+  broker:
+    image: eclipse-mosquitto
+    container_name: mqtt-sim-broker
+    ports:
+      - "1883:1883"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mosquitto_pub -h 127.0.0.1 -p 1883 -t __healthcheck -m ok -q 0 >/dev/null 2>&1",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+
+  sim:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: mqtt-sim-dev
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    environment:
+      PYTHONPATH: /workspace/src
+      PYTHONUNBUFFERED: "1"
+    network_mode: "service:broker" # localhost broker from the perspective of the sim container
+    depends_on:
+      broker:
+        condition: service_healthy
+    stdin_open: true
+    tty: true
+    entrypoint: ["python", "-m", "mqtt_simulator"]
+    command: ["--help"]
