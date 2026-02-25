@@ -1,5 +1,10 @@
 # MQTT Simulator
 
+[![Test Pipeline](https://github.com/marcelo-6/mqtt-sim/actions/workflows/ci.yaml/badge.svg)](https://github.com/marcelo-6/mqtt-sim/actions/workflows/ci.yaml)
+[![Publish Pipeline](https://github.com/marcelo-6/mqtt-sim/actions/workflows/release.yml/badge.svg)](https://github.com/marcelo-6/mqtt-sim/actions/workflows/release.yml)
+[![Coverage](https://codecov.io/gh/marcelo-6/mqtt-sim/graph/badge.svg)](https://codecov.io/gh/marcelo-6/mqtt-sim)
+[![PyPI version](https://img.shields.io/pypi/v/mqtt-simulator)](https://pypi.org/project/mqtt-simulator/)
+
 A MQTT simulator for publishing to a broker by simulating sensors, devices, and senarios.
 
 [Features](#features) •
@@ -99,6 +104,8 @@ docker run --rm --network host mqtt-sim run -c examples/basic.json --duration 10
 ```
 
 > `--network host` is Linux-only. For a cross-platform local setup, prefer Docker Compose.
+
+For release and publishing steps (`git-cliff`, `just release`, tag push, and CD expectations), see [release.md](./release.md).
 
 ## Configuration
 
