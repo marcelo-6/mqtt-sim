@@ -108,7 +108,7 @@ package version="": dist-clean
 
 # Build and validate package artifacts using a synthetic dev version.
 package-dev:
-    suffix="${GITHUB_RUN_ID:-$(date +%Y%m%d%H%M%S)}${GITHUB_RUN_ATTEMPT:-0}${BASHPID:-$$}"; \
+    suffix="$(date +%Y%m%d%H%M%S)"; \
     just package "0.0.0.dev${suffix}"
 
 # Publish package to TestPyPI as a dry run.
