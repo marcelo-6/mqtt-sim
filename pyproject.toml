@@ -1,9 +1,29 @@
 [project]
 name = "mqtt-simulator"
-version = "0.1.0"
+dynamic = ["version"]
 description = "A MQTT simulator for publishing to a broker by simulating sensors, devices, senarios."
 readme = "README.md"
 requires-python = ">=3.13"
+license = "MIT"
+authors = [
+    { name = "Marcelo Amorim" },
+    { name = "Rafael Damasceno" },
+]
+maintainers = [
+    { name = "Marcelo Amorim" },
+]
+keywords = ["mqtt", "simulator", "iot", "sensors", "cli", "testing"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet",
+    "Topic :: Software Development :: Testing",
+    "Topic :: System :: Networking",
+    "Topic :: Utilities",
+]
 dependencies = [
     "paho-mqtt==2.1.0",
     "pydantic==2.12.5",
@@ -11,21 +31,47 @@ dependencies = [
     "typer>=0.24.1",
 ]
 
+[project.urls]
+Homepage = "https://github.com/marcelo-6/mqtt-sim"
+Documentation = "https://github.com/marcelo-6/mqtt-sim"
+Repository = "https://github.com/marcelo-6/mqtt-sim.git"
+Issues = "https://github.com/marcelo-6/mqtt-sim/issues"
+Changelog = "https://github.com/marcelo-6/mqtt-sim/blob/main/CHANGELOG.md"
+
 [project.scripts]
 mqtt-sim = "mqtt_simulator.cli:app"
 
 [build-system]
-requires = ["hatchling>=1.27.0"]
-build-backend = "hatchling.build"
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/mqtt_simulator"]
+requires = ["pdm-backend>=2.4.0"]
+build-backend = "pdm.backend"
 
 [dependency-groups]
 dev = [
     "pytest>=9.0.2,<10.0.0",
     "pytest-cov>=7.0.0,<8.0.0",
     "ruff>=0.15.2,<1.0.0",
+]
+
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true
+
+[tool.pdm.version]
+source = "scm"
+tag_regex = "^(?:v)?(?P<version>\\d+\\.\\d+\\.\\d+)$"
+fallback_version = "0.0.0"
+
+[tool.pdm.build]
+package-dir = "src"
+includes = ["src/mqtt_simulator/"]
+source-includes = [
+    "tests/",
+    "examples/",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
 ]
 
 [tool.pytest.ini_options]
