@@ -120,7 +120,7 @@ commit_parsers = [
   # Catch-all so unconventional commits still show up:
   { message = ".*", group = "Other" },
   # Skip if commit is for changelog generation
-  { message = "^chore\\(release\\): update changelog for", skip = true },
+  { message = "^chore\\(release\\): prepare ", skip = true },
 ]
 # filter out the commits that are not matched by commit parsers
 filter_commits = false
