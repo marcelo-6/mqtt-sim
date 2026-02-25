@@ -1,0 +1,70 @@
+name: CD Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  guard:
+    name: Guard release mode
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Fail if TestPyPI mode is still enabled
+        shell: bash
+        run: |
+          value="${{ vars.USE_TESTPYPI }}"
+          normalized="$(echo "${value:-}" | tr '[:upper:]' '[:lower:]')"
+          if [[ "$normalized" != "false" ]]; then
+            echo "Repository variable USE_TESTPYPI must be set to false before pushing a release tag."
+            echo "Current value: ${value:-<unset>}"
+            exit 1
+          fi
+
+  publish_package:
+    name: Publish package to PyPI
+    needs: guard
+    uses: ./.github/workflows/publish-package.yml
+    with:
+      use_testpypi: false
+    secrets: inherit
+
+  publish_docker:
+    name: Publish Docker image
+    needs: guard
+    uses: ./.github/workflows/publish-docker.yml
+    with:
+      push_image: true
+    secrets: inherit
+
+  create_release:
+    name: Create GitHub release
+    runs-on: ubuntu-latest
+    needs:
+      - publish_package
+      - publish_docker
+    steps:
+      - name: Checkout (full history + tags)
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Extract release notes from changelog
+        run: |
+          python3 .github/scripts/extract_latest_changelog.py \
+            --changelog CHANGELOG.md \
+            --tag "${{ github.ref_name }}" \
+            --output RELEASE_NOTES.md
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body_path: RELEASE_NOTES.md
