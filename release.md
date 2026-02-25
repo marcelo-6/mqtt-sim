@@ -70,7 +70,7 @@ This does not create a git tag. It prepares the changelog/release notes so you c
 
    ```bash
    git add CHANGELOG.md
-   git commit -m "docs(changelog): prepare vX.Y.Z"
+   git commit -m "chore(release): prepare vX.Y.Z"
    git push -u origin chore/release-vX.Y.Z
    ```
 
