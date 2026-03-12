@@ -5,6 +5,10 @@
 [![Coverage](https://codecov.io/gh/marcelo-6/mqtt-sim/graph/badge.svg)](https://codecov.io/gh/marcelo-6/mqtt-sim)
 [![PyPI version](https://img.shields.io/pypi/v/mqtt-simulator)](https://pypi.org/project/mqtt-simulator/)
 
+![PyPI - Downloads](https://img.shields.io/pepy/dt/mqtt-simulator?logo=Pypi)
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/marcelo-6/mqtt-sim/total?logo=GitHub)
+![GitHub commits since latest release](https://img.shields.io/github/commits-since/marcelo-6/mqtt-sim/latest)
+
 A MQTT simulator for publishing to a broker by simulating sensors, devices, and senarios.
 
 [Features](#features) •
