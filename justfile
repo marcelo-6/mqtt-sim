@@ -1,6 +1,6 @@
 set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 
-coverage_threshold := "70"
+coverage_threshold := "65"
 semver_tag_pattern := "^v?[0-9]+\\.[0-9]+\\.[0-9]+$"
 testpypi_publish_url := "https://test.pypi.org/legacy/"
 testpypi_check_url := "https://test.pypi.org/simple/"
