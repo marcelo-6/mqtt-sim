@@ -5,26 +5,33 @@ import pickle
 from pathlib import Path
 
 from mqtt_simulator.config.expand import ResolvedStreamConfig
-from mqtt_simulator.config.models import PayloadSpec
+from mqtt_simulator.config.models import PayloadConfig
 from mqtt_simulator.sim.registry import build_payload_builder
 
 
-def _resolved_stream(payload: dict, *, stream_id: str = "s1") -> ResolvedStreamConfig:
+def _resolved_stream(payload: dict[str, object], *, stream_id: str = "s1") -> ResolvedStreamConfig:
     return ResolvedStreamConfig(
         stream_id=stream_id,
-        broker="main",
+        name=stream_id,
+        client_session_id="session-1",
+        client_name="main",
         topic="demo/topic",
-        interval=0.1,
+        mode="fixed-delay",
+        every=0.1,
+        jitter=None,
+        burst_count=None,
+        burst_spacing=None,
+        schedule_label="fixed-delay 100ms",
         qos=0,
         retain=False,
-        payload=PayloadSpec.model_validate(payload),
+        payload=PayloadConfig.model_validate(payload),
         context={},
     )
 
 
-def test_text_payload_builder_encodes_utf8(tmp_path) -> None:
+def test_text_payload_builder_encodes_utf8(tmp_path: Path) -> None:
     builder = build_payload_builder(
-        _resolved_stream({"kind": "text", "value": "hello"}),
+        _resolved_stream({"text": {"value": "hello"}}),
         config_dir=tmp_path,
         seed=123,
     )
@@ -35,15 +42,11 @@ def test_text_payload_builder_encodes_utf8(tmp_path) -> None:
     assert result.preview == "hello"
 
 
-def test_bytes_payload_builder_supports_base64(tmp_path) -> None:
+def test_bytes_payload_builder_supports_base64(tmp_path: Path) -> None:
     raw = b"\x00\x01demo"
     builder = build_payload_builder(
         _resolved_stream(
-            {
-                "kind": "bytes",
-                "encoding": "base64",
-                "value": base64.b64encode(raw).decode("ascii"),
-            }
+            {"bytes": {"base64": base64.b64encode(raw).decode("ascii")}}
         ),
         config_dir=tmp_path,
         seed=1,
@@ -55,7 +58,7 @@ def test_bytes_payload_builder_supports_base64(tmp_path) -> None:
     assert result.preview.startswith("<bytes ")
 
 
-def test_file_and_pickle_payloads_publish_raw_bytes(tmp_path) -> None:
+def test_file_and_pickle_payloads_publish_raw_bytes(tmp_path: Path) -> None:
     data_dir = tmp_path / "data"
     data_dir.mkdir()
     file_path = data_dir / "payload.bin"
@@ -65,12 +68,12 @@ def test_file_and_pickle_payloads_publish_raw_bytes(tmp_path) -> None:
     pickle_path.write_bytes(pickle.dumps(pickle_payload))
 
     file_builder = build_payload_builder(
-        _resolved_stream({"kind": "file", "path": str(Path("data") / "payload.bin")}),
+        _resolved_stream({"file": {"path": str(Path("data") / "payload.bin")}}),
         config_dir=tmp_path,
         seed=None,
     )
     pickle_builder = build_payload_builder(
-        _resolved_stream({"kind": "pickle_file", "path": str(Path("data") / "payload.pkl")}),
+        _resolved_stream({"pickle": {"path": str(Path("data") / "payload.pkl")}}),
         config_dir=tmp_path,
         seed=None,
     )
@@ -83,21 +86,15 @@ def test_file_and_pickle_payloads_publish_raw_bytes(tmp_path) -> None:
     assert pickle_result.preview.startswith("<pickle ")
 
 
-def test_json_fields_payload_builder_is_seeded_per_stream(tmp_path) -> None:
+def test_json_payload_builder_is_seeded_per_stream(tmp_path: Path) -> None:
     payload = {
-        "kind": "json_fields",
-        "fields": [
-            {
-                "name": "temp",
-                "generator": {
-                    "kind": "number_random",
-                    "numeric_type": "int",
-                    "min": 1,
-                    "max": 3,
-                },
+        "json": {
+            "temp": {"random": {"type": "int", "min": 1, "max": 3}},
+            "ok": {"toggle": True},
+            "metrics": {
+                "amps": {"random": {"type": "float", "min": 2.0, "max": 3.0, "precision": 2}}
             },
-            {"name": "ok", "generator": {"kind": "bool_toggle", "start": True}},
-        ],
+        }
     }
     builder_a = build_payload_builder(
         _resolved_stream(payload, stream_id="stream-a"),

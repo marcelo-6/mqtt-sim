@@ -1,7 +1,8 @@
-"""Stateful value generators used by ``json_fields`` payloads."""
+"""Stateful value generators used by inline JSON payloads."""
 
 from __future__ import annotations
 
+import copy
 import math
 import random
 import time
@@ -10,7 +11,6 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any, Protocol
 
-from ..config.models import KindedSpec
 from ..errors import PayloadBuildError
 
 
@@ -21,48 +21,34 @@ class ValueGenerator(Protocol):
         """Return the next generated value."""
 
 
-def build_value_generator(spec: KindedSpec, *, rng: random.Random) -> ValueGenerator:
-    """Build a stateful generator from a generic kinded spec."""
+def build_value_generator(spec: dict[str, Any], *, rng: random.Random) -> ValueGenerator:
+    """Build a stateful generator from a validated single-operator spec."""
 
-    kind = spec.kind
-    data = _spec_data(spec)
-    if kind == "const":
-        return ConstGenerator(value=data.get("value"))
-    if kind == "bool_toggle":
-        return BoolToggleGenerator(value=bool(data.get("start", False)))
-    if kind == "number_walk":
+    if len(spec) != 1:
+        raise PayloadBuildError("Generator specs must contain exactly one operator")
+
+    operator, data = next(iter(spec.items()))
+    if operator == "toggle":
+        return BoolToggleGenerator(value=bool(data))
+    if operator == "walk":
         return NumberWalkGenerator.from_spec(data)
-    if kind == "number_random":
+    if operator == "random":
         return NumberRandomGenerator.from_spec(data, rng=rng)
-    if kind == "choice":
+    if operator == "pick":
         return ChoiceGenerator.from_spec(data, rng=rng)
-    if kind == "sequence":
+    if operator == "seq":
         return SequenceGenerator.from_spec(data)
-    if kind == "expression":
-        return ExpressionGenerator.from_spec(data, rng=rng)
-    if kind == "timestamp":
-        return TimestampGenerator.from_spec(data)
-    if kind == "uuid":
+    if operator == "expr":
+        return ExpressionGenerator.from_spec(str(data), rng=rng)
+    if operator == "time":
+        return TimestampGenerator.from_spec(str(data))
+    if operator == "uuid":
         return UUIDGenerator()
-    raise PayloadBuildError(f"Unsupported generator kind: {kind}")
-
-
-def _spec_data(spec: KindedSpec) -> dict[str, Any]:
-    """Return a flat spec dictionary including extra keys."""
-
-    dumped = spec.model_dump(mode="python")
-    return dumped
-
-
-@dataclass(slots=True)
-class ConstGenerator:
-    """Return a constant value every time."""
-
-    value: Any
-
-    def next_value(self) -> Any:
-        """Return the configured constant."""
-        return self.value
+    if operator == "counter":
+        return CounterGenerator.from_spec(data)
+    if operator == "null":
+        return NullGenerator()
+    raise PayloadBuildError(f"Unsupported generator operator: {operator}")
 
 
 @dataclass(slots=True)
@@ -91,18 +77,15 @@ class NumberWalkGenerator:
 
     @classmethod
     def from_spec(cls, data: dict[str, Any]) -> NumberWalkGenerator:
-        """Construct a walk generator from a generic spec dict."""
+        """Construct a walk generator from validated options."""
 
-        minimum = float(data.get("min", 0))
-        maximum = float(data.get("max", 100))
-        step = float(data.get("step", 1))
-        if step <= 0:
-            raise PayloadBuildError("number_walk step must be > 0")
-        number_type = str(data.get("numeric_type", "float"))
-        start = data.get("start")
-        current = float(start) if start is not None else minimum
+        minimum = float(data["min"])
+        maximum = float(data["max"])
+        step = float(data["step"])
+        number_type = str(data["type"])
+        current = float(data["start"])
         if minimum > maximum:
-            raise PayloadBuildError("number_walk min must be <= max")
+            raise PayloadBuildError("walk min must be <= max")
         return cls(
             minimum=minimum,
             maximum=maximum,
@@ -141,13 +124,13 @@ class NumberRandomGenerator:
     def from_spec(
         cls, data: dict[str, Any], *, rng: random.Random
     ) -> NumberRandomGenerator:
-        """Construct a random-number generator from spec data."""
+        """Construct a random-number generator from validated options."""
 
-        minimum = float(data.get("min", 0))
-        maximum = float(data.get("max", 100))
+        minimum = float(data["min"])
+        maximum = float(data["max"])
         if minimum > maximum:
-            raise PayloadBuildError("number_random min must be <= max")
-        number_type = str(data.get("numeric_type", "float"))
+            raise PayloadBuildError("random min must be <= max")
+        number_type = str(data["type"])
         precision = data.get("precision")
         return cls(
             minimum=minimum,
@@ -176,18 +159,15 @@ class ChoiceGenerator:
     rng: random.Random = field(repr=False)
 
     @classmethod
-    def from_spec(cls, data: dict[str, Any], *, rng: random.Random) -> ChoiceGenerator:
+    def from_spec(cls, values: list[Any], *, rng: random.Random) -> ChoiceGenerator:
         """Construct a choice generator."""
 
-        values = data.get("values")
-        if not isinstance(values, list) or not values:
-            raise PayloadBuildError("choice generator requires a non-empty values list")
         return cls(values=list(values), rng=rng)
 
     def next_value(self) -> Any:
         """Return a random choice."""
 
-        return self.rng.choice(self.values)
+        return copy.deepcopy(self.rng.choice(self.values))
 
 
 @dataclass(slots=True)
@@ -199,16 +179,10 @@ class SequenceGenerator:
     index: int = 0
 
     @classmethod
-    def from_spec(cls, data: dict[str, Any]) -> SequenceGenerator:
+    def from_spec(cls, values: list[Any]) -> SequenceGenerator:
         """Construct a sequence generator."""
 
-        values = data.get("values")
-        if not isinstance(values, list) or not values:
-            raise PayloadBuildError(
-                "sequence generator requires a non-empty values list"
-            )
-        loop = bool(data.get("loop", True))
-        return cls(values=list(values), loop=loop)
+        return cls(values=list(values), loop=True)
 
     def next_value(self) -> Any:
         """Return the next sequence value."""
@@ -219,7 +193,7 @@ class SequenceGenerator:
             self.index = 0
         value = self.values[self.index]
         self.index += 1
-        return value
+        return copy.deepcopy(value)
 
 
 @dataclass(slots=True)
@@ -237,16 +211,11 @@ class ExpressionGenerator:
     count: int = 0
 
     @classmethod
-    def from_spec(
-        cls, data: dict[str, Any], *, rng: random.Random
-    ) -> ExpressionGenerator:
+    def from_spec(cls, expression: str, *, rng: random.Random) -> ExpressionGenerator:
         """Construct an expression generator."""
 
-        expression = data.get("expression")
-        if not isinstance(expression, str) or not expression.strip():
-            raise PayloadBuildError(
-                "expression generator requires a non-empty expression"
-            )
+        if not expression.strip():
+            raise PayloadBuildError("expr generator requires a non-empty expression")
         return cls(expression=expression, rng=rng)
 
     def next_value(self) -> Any:
@@ -280,12 +249,11 @@ class TimestampGenerator:
     mode: str = "iso"
 
     @classmethod
-    def from_spec(cls, data: dict[str, Any]) -> TimestampGenerator:
+    def from_spec(cls, mode: str) -> TimestampGenerator:
         """Construct a timestamp generator."""
 
-        mode = str(data.get("mode", "iso"))
         if mode not in {"iso", "unix"}:
-            raise PayloadBuildError("timestamp generator mode must be 'iso' or 'unix'")
+            raise PayloadBuildError("time generator mode must be 'iso' or 'unix'")
         return cls(mode=mode)
 
     def next_value(self) -> str | int:
@@ -305,3 +273,36 @@ class UUIDGenerator:
         """Return a new UUID string."""
 
         return str(uuid.uuid4())
+
+
+@dataclass(slots=True)
+class CounterGenerator:
+    """Emit a monotonically increasing numeric counter."""
+
+    current: float
+    step: float
+
+    @classmethod
+    def from_spec(cls, data: dict[str, Any]) -> CounterGenerator:
+        """Construct a counter generator from validated options."""
+
+        return cls(current=float(data["start"]), step=float(data["step"]))
+
+    def next_value(self) -> int | float:
+        """Return the current counter value and advance."""
+
+        value = self.current
+        self.current += self.step
+        if float(value).is_integer() and float(self.step).is_integer():
+            return int(value)
+        return value
+
+
+@dataclass(slots=True)
+class NullGenerator:
+    """Emit JSON null values."""
+
+    def next_value(self) -> None:
+        """Return a null-like value."""
+
+        return None
