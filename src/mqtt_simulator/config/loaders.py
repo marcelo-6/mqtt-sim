@@ -1,19 +1,19 @@
-"""JSON config file loading and summary helpers."""
+"""TOML config file loading and summary helpers."""
 
 from __future__ import annotations
 
-import json
+import tomllib
 from pathlib import Path
 
 from pydantic import ValidationError
 
 from ..errors import ConfigLoadError, ConfigValidationError
-from .expand import resolve_streams
+from .expand import resolve_simulation
 from .models import ConfigSummary, SimulatorConfig
 
 
 def load_config(path: Path) -> SimulatorConfig:
-    """Load and validate a simulator config from a JSON file."""
+    """Load and validate a simulator config from a TOML file."""
 
     try:
         raw_text = path.read_text(encoding="utf-8")
@@ -23,10 +23,10 @@ def load_config(path: Path) -> SimulatorConfig:
         raise ConfigLoadError(f"Unable to read config file: {path}") from exc
 
     try:
-        payload = json.loads(raw_text)
-    except json.JSONDecodeError as exc:
+        payload = tomllib.loads(raw_text)
+    except tomllib.TOMLDecodeError as exc:
         raise ConfigLoadError(
-            f"Invalid JSON in config file {path} at line {exc.lineno}, column {exc.colno}"
+            f"Invalid TOML in config file {path}: {exc}"
         ) from exc
 
     try:
@@ -42,12 +42,14 @@ def load_config(path: Path) -> SimulatorConfig:
 def summarize_config(config: SimulatorConfig) -> ConfigSummary:
     """Build a compact summary of a validated config."""
 
-    resolved = resolve_streams(config)
+    resolved = resolve_simulation(config)
     payload_kinds = sorted({stream.payload.kind for stream in config.streams})
     return ConfigSummary(
         broker_count=len(config.brokers),
+        client_count=len(config.clients),
+        client_session_count=len(resolved.clients),
         stream_template_count=len(config.streams),
-        resolved_stream_count=len(resolved),
+        resolved_stream_count=len(resolved.streams),
         payload_kinds=payload_kinds,
     )
 
@@ -59,6 +61,8 @@ def format_summary(summary: ConfigSummary) -> str:
     return (
         "Config valid: "
         f"brokers={summary.broker_count} "
+        f"clients={summary.client_count} "
+        f"client_sessions={summary.client_session_count} "
         f"stream_templates={summary.stream_template_count} "
         f"resolved_streams={summary.resolved_stream_count} "
         f"payload_kinds=[{payloads}]"
