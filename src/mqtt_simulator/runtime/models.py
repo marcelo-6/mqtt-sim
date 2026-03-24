@@ -27,13 +27,11 @@ class Renderer(Protocol):
 
 
 @dataclass(slots=True)
-class RuntimeStream:
-    """One publish stream bound to a broker and payload builder."""
+class RuntimeLifecycleMessage:
+    """One resolved lifecycle publish message."""
 
-    stream_id: str
-    broker_name: str
+    event: str
     topic: str
-    interval: float
     qos: int
     retain: bool
     payload_builder: PayloadBuilder
@@ -41,10 +39,42 @@ class RuntimeStream:
 
 
 @dataclass(slots=True)
-class BrokerRuntime:
-    """Broker config used by the runtime layer."""
+class RuntimeClient:
+    """One resolved MQTT client session."""
 
-    config: BrokerConfig
+    session_id: str
+    client_name: str
+    broker_name: str
+    broker: BrokerConfig
+    client_id: str
+    clean_session: bool
+    lifecycle: dict[str, RuntimeLifecycleMessage]
+
+
+@dataclass(slots=True)
+class RuntimeSchedule:
+    """Runtime schedule settings for one stream."""
+
+    mode: str
+    every: float
+    jitter: float | None
+    burst_count: int | None
+    burst_spacing: float | None
+    label: str
+
+
+@dataclass(slots=True)
+class RuntimeStream:
+    """One publish stream bound to a resolved client session."""
+
+    stream_id: str
+    client_session_id: str
+    topic: str
+    schedule: RuntimeSchedule
+    qos: int
+    retain: bool
+    payload_builder: PayloadBuilder
+    payload_kind: str
 
 
 @dataclass(slots=True)
@@ -53,7 +83,7 @@ class StreamStatus:
 
     stream_id: str
     topic: str
-    interval: float
+    schedule_label: str
     state: str = "pending"
     publish_count: int = 0
     last_publish_ts: float | None = None

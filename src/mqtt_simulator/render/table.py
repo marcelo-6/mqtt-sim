@@ -108,7 +108,7 @@ class TableRenderer:
 
         table.add_column("Topic", style="cyan", overflow="ellipsis", ratio=2)
         table.add_column("State", style="white", no_wrap=True)
-        table.add_column("Interval", style="magenta", justify="right", no_wrap=True)
+        table.add_column("Schedule", style="magenta", overflow="ellipsis", ratio=1)
         table.add_column(
             "Count", style="bold bright_green", justify="right", no_wrap=True
         )
@@ -151,7 +151,7 @@ class TableRenderer:
         return (
             Text(str(stream.topic)),
             state_cell,
-            Text(f"{stream.interval:.2f}s"),
+            Text(str(stream.schedule_label)),
             Text(str(stream.publish_count)),
             Text(last_pub),
             Text(str(stream.last_payload_preview or "-")),
