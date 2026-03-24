@@ -1,0 +1,28 @@
+# Example: Pickle File Payload
+# Small example that publishes raw bytes from a pickle file without unpickling it.
+# Comments point out the important pieces so you can copy just the parts you need.
+# Full schema reference: https://github.com/marcelo-6/mqtt-sim/tree/main/docs/configuration.md
+
+config_version = 1
+name = "Pickle File Payload"
+
+# Broker connection settings. Omit `port` here because the default MQTT port is already 1883.
+[brokers.main]
+host = "localhost"
+
+# Most examples keep a single named client to stay compact and easy to edit.
+[clients.main]
+broker = "main"
+id = "pickle-file-sim"
+
+
+# Stream: binary/pickle/demo
+# Topic: binary/pickle/demo
+[[streams]]
+client = "main"
+topic = "binary/pickle/demo"
+every = "2s"
+
+# Reads raw bytes from a pickle file without unpickling it.
+[streams.payload.pickle]
+path = "data/sample.pkl"

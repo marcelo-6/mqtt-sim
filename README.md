@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD033 -->
 # MQTT Simulator
 
 [![Test Pipeline](https://github.com/marcelo-6/mqtt-sim/actions/workflows/ci.yaml/badge.svg)](https://github.com/marcelo-6/mqtt-sim/actions/workflows/ci.yaml)
@@ -11,155 +12,185 @@
 
 A MQTT simulator for publishing to a broker by simulating sensors, devices, and senarios.
 
-[Features](#features) •
-[Getting Started](#getting-started) •
-[Configuration](#configuration) •
+`mqtt-sim` reads a TOML file and starts publishing realistic MQTT traffic:
+device state, sensor readings, lifecycle messages, file payloads, bursts,
+slow streams, fast streams, whatever you need for testing or demos.
+
+[Features](#features) |
+[Quick Start](#quick-start) |
+[Install and Run](#install-and-run) |
+[Configuration](#configuration) |
 [History and Alternatives](#history-and-alternatives)
 
 ![Simulator Running](docs/images/simulator-running.gif)
 
 ## Features
 
-* Easy to configure simulator for publishing data to an MQTT broker
-* Simple setup with a single JSON configuration file
-* Publish data on predefined fixed topics
-* Publish data on multiple topics that have a variable id or items at the end
-* Simulated random variation of data based on configurable parameters
-* Inline updating terminal table output for simulator status (with logs)
+* Easy to configure simulator for publishing data to a MQTT broker
+* Supports multiple brokers, clients, streams, and payload types in one config file
+* Inline table output while the simulator is running
 
 > [!NOTE]
 > Below is a sample of the simulated data generated the terminal UI is [EdJoPaTo/mqttui](https://github.com/EdJoPaTo/mqttui)
 
 ![Simulator Data Sample](docs/images/mqttui-sample.gif)
 
-## Getting Started
+## Quick Start
+
+If you just want to see it work, use a broker on `localhost:1883` and this
+config (better examples under `examples/*`):
+
+```toml
+config_version = 1
+
+[brokers.main]
+host = "localhost"
+
+[clients.main]
+broker = "main"
+id = "demo-${device_id}"
+
+[[streams]]
+client = "main"
+topic = "demo/${device_id}/status"
+every = "1s"
+
+[streams.expand]
+device_id = { range = [1, 3] }
+
+[streams.payload.json]
+ok = { toggle = true }
+temperature_c = { random = { type = "float", min = 18, max = 32, precision = 1 } }
+ts = { time = "unix" }
+```
+
+Once installed, run:
+
+```shell
+mqtt-sim validate -c config.toml
+mqtt-sim run -c config.toml
+```
+
+No broker running yet? If you cloned this repo, the fastest local one is:
+
+```shell
+docker compose up -d broker
+```
+
+## Install and Run
 
 > [!NOTE]
-> This assumes you already have a broker running on `localhost`. If not, use the Docker Compose below.
+> Python `3.13+` is required if you are not using docker.
 
-### Running using uv
+Pick the path that matches how you want to use it.
 
-Run the simulator with [uv](https://github.com/astral-sh/uv):
+> [!TIP] Recommended
+> <details>
+>
+> <summary>Just want to use the tool? Install it from PyPI</summary>
+>
+> ```bash
+> uv tool install mqtt-simulator
+> mqtt-sim --help
+> ```
+>
+> Then run it with your own config (or use the examples in this repo):
+>
+> ```bash
+> mqtt-sim validate -c config.toml
+> mqtt-sim run -c config.toml
+> ```
+>
+> </details>
+>
+> <details>
+>
+> <summary>Do not want to install any Python stuff? Use the GHCR docker image instead.</summary>
+>
+>
+> ```bash
+> docker run --rm ghcr.io/marcelo-6/mqtt-sim:latest --help
+> ```
+>
+> To run your own config file:
+>
+> ```bash
+> docker run --rm \
+>   -v "$PWD:/work" \
+>   ghcr.io/marcelo-6/mqtt-sim:latest \
+>   validate -c /work/config.toml
+>
+> docker run --rm \
+>   -v "$PWD:/work" \
+>   ghcr.io/marcelo-6/mqtt-sim:latest \
+>   run -c /work/config.toml
+> ```
+>
+> If your broker is running on your host, you may want `--network host` on Linux.
+>
+> </details>
 
-```shell
-uv sync --dev
-uv run mqtt-sim run -c examples/basic.json
+<details>
+
+<summary>Not using <q>uv</q>?</summary>
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install mqtt-simulator
+mqtt-sim --help
 ```
 
-### Running using Python
+Then:
 
-> [!TIP]
-> `uv` Recommended instead
-
-Run the simulator with a config file (`examples/basic.json`):
-
-```shell
-PYTHONPATH=src python3 -m mqtt_simulator run -c examples/basic.json
+```bash
+mqtt-sim validate -c config.toml
+mqtt-sim run -c config.toml
 ```
 
-Validate a config before running:
+</details>
 
-```shell
-PYTHONPATH=src python3 -m mqtt_simulator validate -c examples/basic.json
-```
-
-To install all dependencies with a virtual environment before using:
-
-```shell
-python3 -m venv venv
-source venv/bin/activate
-pip3 install -r requirements.txt
-pip3 install -e .
-```
-
-### Running from Source with Docker Compose
-
-This repo includes a `compose.yaml` with:
-
-* `broker`: a local Mosquitto test broker with a health check
-* `sim`: a `python:3.13-slim` container with this codebase mounted
-
-> [!WARNING]
-> This will start the broker first before running the simulator
-
-```shell
-docker compose up -d broker && docker compose run --rm sim run -c examples/basic.json --duration 10
-```
-
-Stop the broker when you are done:
-
-```shell
-docker compose down
-```
-
-### Running with the Standalone Dockerfile (optional)
-
-You can also build the standalone image:
-
-```shell
-docker build -t mqtt-sim .
-docker run --rm mqtt-sim --help
-```
-
-To run the bundled example against a broker running on your host:
-
-```shell
-docker run --rm --network host mqtt-sim run -c examples/basic.json --duration 10
-```
-
-> `--network host` is Linux-only. For a cross-platform local setup, prefer Docker Compose.
-
-For release and publishing steps (`git-cliff`, `just release`, tag push, and CD expectations), see [release.md](./release.md).
+> [!IMPORTANT]
+> <details>
+>
+> <summary>Want the examples? Clone the repo and use <q>uv</q>.</summary>
+>
+> ```bash
+> git clone https://github.com/marcelo-6/mqtt-sim.git
+> cd mqtt-sim
+> uv sync
+> uv run mqtt-sim validate -c examples/basic.toml
+> uv run mqtt-sim run -c examples/basic.toml
+> ```
+>
+> If you need a local broker too:
+>
+> ```bash
+> docker compose up -d broker
+> ```
+>
+> </details>
 
 ## Configuration
 
 See the [configuration documentation](./docs/configuration.md) for the current schema and configurable options.
 
-Expression generator details (for `json_fields` payloads) are documented in:
+For the schema used by the CLI, start with:
+
+* [examples/basic.toml](./examples/basic.toml)
+* [examples/README.md](./examples/README.md)
+
+If you are mostly interested in the expression generator, there is a focused
+page for that too:
 
 * [docs/math_expression.md](./docs/math_expression.md)
 
-For the schema used by the CLI, start with:
+The shipped examples are heavily commented on purpose, so you can read them
+top-down and copy only the sections you need.
 
-* [examples/basic.json](./examples/basic.json)
-* [examples/many_streams.json](./examples/many_streams.json)
-* [examples/pickle_file.json](./examples/pickle_file.json)
-* [examples/README.md](./examples/README.md)
-
-Below is a minimal configuration file for the implementation. It uses a single broker and range expansion to publish JSON payloads generated from multiple field generators:
-
-```json
-{
-  "schema_version": 1,
-  "brokers": [
-    {
-      "name": "main",
-      "host": "broker.hivemq.com",
-      "port": 1883
-    }
-  ],
-  "streams": [
-    {
-      "broker": "main",
-      "topic": "site/{id}/status",
-      "interval": 2.0,
-      "expand": {
-        "kind": "range",
-        "var": "id",
-        "start": 1,
-        "stop": 3
-      },
-      "payload": {
-        "kind": "json_fields",
-        "fields": [
-          { "name": "ok", "generator": { "kind": "bool_toggle", "start": true } },
-          { "name": "temp", "generator": { "kind": "number_random", "numeric_type": "float", "min": 20, "max": 40, "precision": 1 } }
-        ]
-      }
-    }
-  ]
-}
-```
+If you want the full schema, see [docs/configuration.md](./docs/configuration.md).
+If you just want something to ~~steal and tweak~~ reference existing config, the examples folder is usually
+the better starting point.
 
 ## History and Alternatives
 

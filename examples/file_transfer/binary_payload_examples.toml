@@ -1,0 +1,81 @@
+# Example: Binary Payload Examples
+# Shows the binary-oriented payload kinds: inline bytes, file-backed bytes, and pickle bytes.
+# Comments point out the important pieces so you can copy just the parts you need.
+# Full schema reference: https://github.com/marcelo-6/mqtt-sim/tree/main/docs/configuration.md
+
+config_version = 1
+name = "Binary Payload Examples"
+
+# Broker connection settings. Omit `port` here because the default MQTT port is already 1883.
+[brokers.main]
+host = "localhost"
+
+# Most examples keep a single named client to stay compact and easy to edit.
+[clients.main]
+broker = "main"
+id = "file-transfer-binary-payload-examples-sim"
+
+
+# Stream: inline_bytes_utf8
+# Topic: file-transfer/binary/inline-utf8
+[[streams]]
+name = "inline_bytes_utf8"
+client = "main"
+topic = "file-transfer/binary/inline-utf8"
+every = "2s"
+
+# Inline raw bytes payload; pick the source encoding that matches your input.
+[streams.payload.bytes]
+utf8 = "hello-from-utf8"
+
+
+# Stream: inline_bytes_hex
+# Topic: file-transfer/binary/inline-hex
+[[streams]]
+name = "inline_bytes_hex"
+client = "main"
+topic = "file-transfer/binary/inline-hex"
+every = "2s"
+
+# Inline raw bytes payload; pick the source encoding that matches your input.
+[streams.payload.bytes]
+hex = "48656c6c6f2d66726f6d2d686578"
+
+
+# Stream: inline_bytes_base64
+# Topic: file-transfer/binary/inline-base64
+[[streams]]
+name = "inline_bytes_base64"
+client = "main"
+topic = "file-transfer/binary/inline-base64"
+every = "2s"
+
+# Inline raw bytes payload; pick the source encoding that matches your input.
+[streams.payload.bytes]
+base64 = "SGVsbG8tZnJvbS1iYXNlNjQ="
+
+
+# Stream: file_payload_raw
+# Topic: file-transfer/binary/file
+[[streams]]
+name = "file_payload_raw"
+client = "main"
+topic = "file-transfer/binary/file"
+every = "2s"
+
+# Reads raw bytes from a fixture file on disk.
+[streams.payload.file]
+path = "../data/sample.bin"
+
+
+# Stream: pickle_payload_raw
+# Topic: file-transfer/binary/pickle
+[[streams]]
+name = "pickle_payload_raw"
+client = "main"
+topic = "file-transfer/binary/pickle"
+every = "2s"
+
+# Reads raw bytes from a pickle file without unpickling it.
+[streams.payload.pickle]
+path = "../data/sample.pkl"

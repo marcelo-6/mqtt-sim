@@ -1,0 +1,98 @@
+# Example: Smartwatch Health Streams
+# Streams smartwatch health and activity topics including sleep, stress, GPS, and timestamped movement.
+# Comments point out the important pieces so you can copy just the parts you need.
+# Full schema reference: https://github.com/marcelo-6/mqtt-sim/tree/main/docs/configuration.md
+
+config_version = 1
+name = "Smartwatch Health Streams"
+
+# Broker connection settings. Omit `port` here because the default MQTT port is already 1883.
+[brokers.main]
+host = "localhost"
+
+# Most examples keep a single named client to stay compact and easy to edit.
+[clients.main]
+broker = "main"
+id = "wearables-smartwatch-health-streams-sim"
+
+
+# Stream: spo2_watch_a
+# Topic: wearables/watch-a/spo2
+[[streams]]
+name = "spo2_watch_a"
+client = "main"
+topic = "wearables/watch-a/spo2"
+every = "1600ms"
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Sample `spo2_pct` randomly inside a plausible range for this kind of telemetry.
+spo2_pct = { random = { type = "int", min = 92, max = 100 } }
+# Pick a value for `worn` from the configured list each time this stream publishes.
+worn = { pick = [true, true, true, false] }
+
+
+# Stream: stress_watch_a
+# Topic: wearables/watch-a/stress
+[[streams]]
+name = "stress_watch_a"
+client = "main"
+topic = "wearables/watch-a/stress"
+every = "1s"
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Sample `stress_score` randomly inside a plausible range for this kind of telemetry.
+stress_score = { random = { type = "int", min = 5, max = 95 } }
+# Choose `state` from a small set of named states or labels on each publish.
+state = { pick = ["low", "medium", "high"] }
+
+
+# Stream: sleep_state_watch_a
+# Topic: wearables/watch-a/sleep
+[[streams]]
+name = "sleep_state_watch_a"
+client = "main"
+topic = "wearables/watch-a/sleep"
+every = "5s"
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Step `stage` through a repeating sequence so this stream follows a recognizable progression.
+stage = { seq = ["awake", "light", "deep", "rem", "light", "awake"] }
+# Generate a fresh unique identifier for `session_id` on every publish.
+session_id = { uuid = true }
+
+
+# Stream: activity_watch_a
+# Topic: wearables/watch-a/activity
+[[streams]]
+name = "activity_watch_a"
+client = "main"
+topic = "wearables/watch-a/activity"
+every = "1200ms"
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Choose `mode` from a small set of named states or labels on each publish.
+mode = { pick = ["idle", "walk", "run", "cycle"] }
+# Sample `pace_min_per_km` randomly inside a plausible range for this kind of telemetry.
+pace_min_per_km = { random = { type = "float", min = 4.0, max = 8.5, precision = 2 } }
+
+
+# Stream: gps_watch_a
+# Topic: wearables/watch-a/gps
+[[streams]]
+name = "gps_watch_a"
+client = "main"
+topic = "wearables/watch-a/gps"
+every = "1s"
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Sample `speed_mps` randomly inside a plausible range for this kind of telemetry.
+speed_mps = { random = { type = "float", min = 0, max = 6.5, precision = 2 } }
+# Recompute `distance_m` from the previous value so it keeps accumulating over time.
+distance_m = { expr = "(prev or 0) + uniform(0, 4)" }
+# Stamp `ts` with the current UNIX time so subscribers can track freshness.
+ts = { time = "unix" }

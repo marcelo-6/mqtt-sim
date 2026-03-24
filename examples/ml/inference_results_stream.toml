@@ -1,0 +1,104 @@
+# Example: Inference Results Stream
+# Publishes inference outputs, latency telemetry, routing decisions, service health, and batch summaries.
+# Comments point out the important pieces so you can copy just the parts you need.
+# Full schema reference: https://github.com/marcelo-6/mqtt-sim/tree/main/docs/configuration.md
+
+config_version = 1
+name = "Inference Results Stream"
+
+# Broker connection settings. Omit `port` here because the default MQTT port is already 1883.
+[brokers.main]
+host = "localhost"
+
+# Most examples keep a single named client to stay compact and easy to edit.
+[clients.main]
+broker = "main"
+id = "ml-inference-results-stream-sim"
+
+
+# Stream: image_classifier_result
+# Topic: ml/inference/image-classifier/results
+[[streams]]
+name = "image_classifier_result"
+client = "main"
+topic = "ml/inference/image-classifier/results"
+every = "800ms"
+qos = 1
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Generate a fresh unique identifier for `request_id` on every publish.
+request_id = { uuid = true }
+# Choose `label` from a small set of named states or labels on each publish.
+label = { pick = ["person", "forklift", "helmet", "box"] }
+# Sample `confidence` randomly inside a plausible range for this kind of telemetry.
+confidence = { random = { type = "float", min = 0.55, max = 0.99, precision = 3 } }
+# Choose `model_version` from a small set of named states or labels on each publish.
+model_version = { pick = ["vision-2.4.1", "vision-2.4.2"] }
+
+
+# Stream: latency_metrics
+# Topic: ml/inference/image-classifier/latency
+[[streams]]
+name = "latency_metrics"
+client = "main"
+topic = "ml/inference/image-classifier/latency"
+every = "800ms"
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Sample `latency_ms` randomly inside a plausible range for this kind of telemetry.
+latency_ms = { random = { type = "int", min = 12, max = 140 } }
+# Sample `queue_depth` randomly inside a plausible range for this kind of telemetry.
+queue_depth = { random = { type = "int", min = 0, max = 25 } }
+
+
+# Stream: routing_decision
+# Topic: ml/inference/router/decision
+[[streams]]
+name = "routing_decision"
+client = "main"
+topic = "ml/inference/router/decision"
+every = "1200ms"
+retain = true
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Choose `route` from a small set of named states or labels on each publish.
+route = { pick = ["prod", "prod", "prod", "canary"] }
+# Choose `node` from a small set of named states or labels on each publish.
+node = { pick = ["gpu-a", "gpu-b", "gpu-c"] }
+
+
+# Stream: inference_status
+# Topic: ml/inference/image-classifier/status
+[[streams]]
+name = "inference_status"
+client = "main"
+topic = "ml/inference/image-classifier/status"
+every = "1500ms"
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Pick a value for `ok` from the configured list each time this stream publishes.
+ok = { pick = [true, true, true, true, false] }
+# Choose `error_type` from a small set of named states or labels on each publish.
+error_type = { pick = ["none", "none", "timeout", "decode_error"] }
+
+
+# Stream: batch_summary_event
+# Topic: ml/inference/image-classifier/batch-summary
+[[streams]]
+name = "batch_summary_event"
+client = "main"
+topic = "ml/inference/image-classifier/batch-summary"
+every = "3s"
+
+# Sequence payload: cycles through known values to emulate a deterministic event flow.
+[streams.payload.sequence]
+format = "json"
+items = [
+  { window_s = 5, requests = 128, errors = 0 },
+  { window_s = 5, requests = 132, errors = 1 },
+  { window_s = 5, requests = 125, errors = 0 },
+]

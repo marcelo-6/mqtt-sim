@@ -1,7 +1,7 @@
 # (Output is provided via `vhs -o ...` from the shell script)
 
 # Bigger output (dimensions are in pixels)
-Set Width 1600
+Set Width 1920
 Set Height 600
 Set FontSize 24
 

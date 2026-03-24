@@ -1,0 +1,98 @@
+# Example: File Drop Events
+# Emits a realistic file-drop event stream covering metadata, status progression, checksums, retries, and completion.
+# Comments point out the important pieces so you can copy just the parts you need.
+# Full schema reference: https://github.com/marcelo-6/mqtt-sim/tree/main/docs/configuration.md
+
+config_version = 1
+name = "File Drop Events"
+
+# Broker connection settings. Omit `port` here because the default MQTT port is already 1883.
+[brokers.main]
+host = "localhost"
+
+# Most examples keep a single named client to stay compact and easy to edit.
+[clients.main]
+broker = "main"
+id = "file-transfer-file-drop-events-sim"
+
+
+# Stream: file_metadata
+# Topic: file-transfer/dropbox/events/metadata
+[[streams]]
+name = "file_metadata"
+client = "main"
+topic = "file-transfer/dropbox/events/metadata"
+every = "2s"
+qos = 1
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Generate a fresh unique identifier for `transfer_id` on every publish.
+transfer_id = { uuid = true }
+# Pick a value for `filename` from the configured list each time this stream publishes.
+filename = { pick = ["batch_001.csv", "batch_002.csv", "batch_003.csv"] }
+# Sample `size_bytes` randomly inside the configured range on each publish.
+size_bytes = { random = { type = "int", min = 4096, max = 65536 } }
+
+
+# Stream: transfer_status
+# Topic: file-transfer/dropbox/events/status
+[[streams]]
+name = "transfer_status"
+client = "main"
+topic = "file-transfer/dropbox/events/status"
+every = "1200ms"
+retain = true
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Step `state` through a repeating sequence so this stream follows a recognizable progression.
+state = { seq = ["queued", "starting", "transferring", "verifying", "complete"] }
+
+
+# Stream: checksum_event
+# Topic: file-transfer/dropbox/events/checksum
+[[streams]]
+name = "checksum_event"
+client = "main"
+topic = "file-transfer/dropbox/events/checksum"
+every = "2500ms"
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Choose `algorithm` from a small set of named states or labels on each publish.
+algorithm = { pick = ["sha256", "md5"] }
+# Pick a value for `checksum` from the configured list each time this stream publishes.
+checksum = { pick = ["9b74c9897bac770ffc029102a200c5de", "a54d88e06612d820bc3be72877c74f257b561b19"] }
+
+
+# Stream: retry_counter
+# Topic: file-transfer/dropbox/events/retries
+[[streams]]
+name = "retry_counter"
+client = "main"
+topic = "file-transfer/dropbox/events/retries"
+every = "1s"
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Sample `retries` randomly inside the configured range on each publish.
+retries = { random = { type = "int", min = 0, max = 3 } }
+
+
+# Stream: completion_event
+# Topic: file-transfer/dropbox/events/completion
+[[streams]]
+name = "completion_event"
+client = "main"
+topic = "file-transfer/dropbox/events/completion"
+every = "3s"
+
+# Sequence payload: cycles through known values to emulate a deterministic event flow.
+[streams.payload.sequence]
+format = "json"
+items = [
+  { status = "success", duration_s = 3.4 },
+  { status = "success", duration_s = 2.9 },
+  { status = "failed", duration_s = 4.8, reason = "checksum_mismatch" },
+]

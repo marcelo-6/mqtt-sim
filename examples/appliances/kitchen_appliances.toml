@@ -1,0 +1,101 @@
+# Example: Kitchen Appliances
+# Simulates a kitchen full of independent appliance state topics with a mix of random, walking, and sequence generators.
+# Comments point out the important pieces so you can copy just the parts you need.
+# Full schema reference: https://github.com/marcelo-6/mqtt-sim/tree/main/docs/configuration.md
+
+config_version = 1
+name = "Kitchen Appliances"
+
+# Broker connection settings. Omit `port` here because the default MQTT port is already 1883.
+[brokers.main]
+host = "localhost"
+
+# Most examples keep a single named client to stay compact and easy to edit.
+[clients.main]
+broker = "main"
+id = "appliances-kitchen-appliances-sim"
+
+
+# Stream: fridge_main
+# Topic: appliances/kitchen/fridge/main-compartment
+[[streams]]
+name = "fridge_main"
+client = "main"
+topic = "appliances/kitchen/fridge/main-compartment"
+every = "3s"
+retain = true
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Recompute `temp_c` from the previous value so it drifts smoothly instead of jumping around.
+temp_c = { expr = "(prev or 3.5) + uniform(-0.15, 0.15)" }
+# Pick a value for `door_open` from the configured list each time this stream publishes.
+door_open = { pick = [false, false, false, true] }
+
+
+# Stream: oven_state
+# Topic: appliances/kitchen/oven/state
+[[streams]]
+name = "oven_state"
+client = "main"
+topic = "appliances/kitchen/oven/state"
+every = "1500ms"
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Choose `mode` from a small set of named states or labels on each publish.
+mode = { pick = ["off", "bake", "broil", "preheat"] }
+# Pick a value for `setpoint_c` from the configured list each time this stream publishes.
+setpoint_c = { pick = [0, 160, 180, 200, 220] }
+# Walk `cavity_temp_c` through its configured range in fixed increments on each publish.
+cavity_temp_c = { walk = { type = "int", min = 25, max = 220, step = 15, start = 25 } }
+
+
+# Stream: dishwasher_cycle
+# Topic: appliances/kitchen/dishwasher/cycle
+[[streams]]
+name = "dishwasher_cycle"
+client = "main"
+topic = "appliances/kitchen/dishwasher/cycle"
+every = "2s"
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Step `state` through a repeating sequence so this stream follows a recognizable progression.
+state = { seq = ["idle", "fill", "wash", "rinse", "dry", "complete"] }
+# Step `minutes_remaining` through the configured range to mimic a countdown-style reading.
+minutes_remaining = { walk = { type = "int", min = 0, max = 90, step = 10, start = 90 } }
+
+
+# Stream: coffee_machine
+# Topic: appliances/kitchen/coffee-machine/state
+[[streams]]
+name = "coffee_machine"
+client = "main"
+topic = "appliances/kitchen/coffee-machine/state"
+every = "1s"
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Choose `status` from a small set of named states or labels on each publish.
+status = { pick = ["idle", "heating", "brewing", "cleaning"] }
+# Walk `water_tank_pct` through its configured range in fixed increments instead of pure random jumps.
+water_tank_pct = { walk = { type = "int", min = 10, max = 100, step = 5, start = 85 } }
+
+
+# Stream: microwave_state
+# Topic: appliances/kitchen/microwave/state
+[[streams]]
+name = "microwave_state"
+client = "main"
+topic = "appliances/kitchen/microwave/state"
+every = "1200ms"
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Flip `running` between true and false on each publish.
+running = { toggle = false }
+# Pick a value for `power_level` from the configured list each time this stream publishes.
+power_level = { pick = ["low", "medium", "high"] }
+# Sample `seconds_remaining` randomly inside the configured range on each publish.
+seconds_remaining = { random = { type = "int", min = 0, max = 120 } }
