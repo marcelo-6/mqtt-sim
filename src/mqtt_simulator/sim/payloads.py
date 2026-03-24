@@ -3,13 +3,22 @@
 from __future__ import annotations
 
 import base64
+import copy
 import json
 import random
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
-from ..config.models import JsonFieldSpec, PayloadSpec
+from ..config.models import (
+    BytesPayloadConfig,
+    FilePayloadConfig,
+    JsonPayloadConfig,
+    PayloadConfig,
+    PicklePayloadConfig,
+    SequencePayloadConfig,
+    TextPayloadConfig,
+)
 from ..errors import PayloadBuildError
 from .generators import ValueGenerator, build_value_generator
 from .preview import preview_payload
@@ -100,81 +109,97 @@ class SequencePayloadBuilder:
 
 
 @dataclass(slots=True)
-class JsonFieldRuntime:
-    """A configured JSON field generator bound to its field name."""
+class JsonNode(Protocol):
+    """Protocol for one compiled JSON payload node."""
 
-    name: str
-    generator: ValueGenerator
+    def build_value(self) -> Any:
+        """Return the next concrete JSON value for this node."""
 
 
 @dataclass(slots=True)
-class JsonFieldsPayloadBuilder:
-    """Publish a JSON object assembled from multiple field generators."""
+class JsonConstantNode:
+    """A constant JSON payload node."""
 
-    fields: list[JsonFieldRuntime]
+    value: Any
+
+    def build_value(self) -> Any:
+        """Return a deep-copied constant value."""
+
+        return copy.deepcopy(self.value)
+
+
+@dataclass(slots=True)
+class JsonGeneratorNode:
+    """A dynamic JSON payload node backed by a stateful generator."""
+
+    generator: ValueGenerator
+
+    def build_value(self) -> Any:
+        """Return the next generated value."""
+
+        return self.generator.next_value()
+
+
+@dataclass(slots=True)
+class JsonObjectNode:
+    """A JSON object assembled from nested constant/generator nodes."""
+
+    fields: dict[str, JsonNode]
+
+
+    def build_value(self) -> dict[str, Any]:
+        """Return the next concrete JSON object."""
+
+        return {name: node.build_value() for name, node in self.fields.items()}
+
+
+@dataclass(slots=True)
+class JsonPayloadBuilder:
+    """Publish a JSON object assembled from a nested payload tree."""
+
+    root: JsonObjectNode
 
     def build(self) -> PayloadBuildResult:
         """Generate a JSON object and encode it as UTF-8 bytes."""
 
-        payload = {field.name: field.generator.next_value() for field in self.fields}
-        encoded = json.dumps(payload, separators=(",", ":"), default=str).encode(
-            "utf-8"
-        )
-        return PayloadBuildResult(encoded, preview_payload(payload, "json_fields"))
+        payload = self.root.build_value()
+        encoded = json.dumps(payload, separators=(",", ":"), default=str).encode("utf-8")
+        return PayloadBuildResult(encoded, preview_payload(payload, "json"))
 
 
-def build_text_builder(payload_spec: PayloadSpec) -> TextPayloadBuilder:
-    """Build a text payload builder from a generic payload spec."""
+def build_text_builder(payload_spec: TextPayloadConfig) -> TextPayloadBuilder:
+    """Build a text payload builder."""
 
-    value = payload_spec.model_dump(mode="python").get("value")
-    if not isinstance(value, str):
-        raise PayloadBuildError("text payload requires a string 'value'")
-    return TextPayloadBuilder(value=value)
+    return TextPayloadBuilder(value=payload_spec.value)
 
 
-def build_bytes_builder(payload_spec: PayloadSpec) -> BytesPayloadBuilder:
-    """Build a raw-bytes payload builder from inline text/hex/base64 content."""
+def build_bytes_builder(payload_spec: BytesPayloadConfig) -> BytesPayloadBuilder:
+    """Build a raw-bytes payload builder from one inline source."""
 
-    data = payload_spec.model_dump(mode="python")
-    value = data.get("value")
-    encoding = str(data.get("encoding", "utf8"))
-    if not isinstance(value, str):
-        raise PayloadBuildError("bytes payload requires a string 'value'")
     try:
-        if encoding == "utf8":
-            payload = value.encode("utf-8")
-        elif encoding == "hex":
-            payload = bytes.fromhex(value)
-        elif encoding == "base64":
-            payload = base64.b64decode(value)
-        else:
-            raise PayloadBuildError(
-                "bytes payload encoding must be utf8, hex, or base64"
-            )
+        if payload_spec.utf8 is not None:
+            payload = payload_spec.utf8.encode("utf-8")
+        elif payload_spec.hex is not None:
+            payload = bytes.fromhex(payload_spec.hex)
+        elif payload_spec.base64 is not None:
+            payload = base64.b64decode(payload_spec.base64)
+        else:  # pragma: no cover - guarded by config validation
+            raise PayloadBuildError("bytes payload has no configured source")
     except ValueError as exc:
         raise PayloadBuildError(f"bytes payload decoding failed: {exc}") from exc
     return BytesPayloadBuilder(payload=payload)
 
 
 def build_file_builder(
-    payload_spec: PayloadSpec, *, config_dir: Path, kind: str
+    payload_spec: FilePayloadConfig | PicklePayloadConfig,
+    *,
+    config_dir: Path,
+    kind: str,
 ) -> FilePayloadBuilder:
-    """Build a file-backed payload builder.
+    """Build a file-backed payload builder."""
 
-    Args:
-        payload_spec: The generic payload spec that contains a ``path`` field.
-        config_dir: Base directory used for resolving relative file paths.
-        kind: Either ``file`` or ``pickle_file``.
-    """
-
-    data = payload_spec.model_dump(mode="python")
-    raw_path = data.get("path")
-    if not isinstance(raw_path, str) or not raw_path:
-        raise PayloadBuildError(f"{kind} payload requires a non-empty 'path'")
-    if Path(raw_path).is_absolute():
-        path = Path(raw_path)
-    else:
-        path = (config_dir / raw_path).resolve()
+    raw_path = payload_spec.path
+    path = Path(raw_path) if Path(raw_path).is_absolute() else (config_dir / raw_path).resolve()
     try:
         payload = path.read_bytes()
     except OSError as exc:
@@ -182,41 +207,86 @@ def build_file_builder(
     return FilePayloadBuilder(payload=payload, kind=kind)
 
 
-def build_sequence_builder(payload_spec: PayloadSpec) -> SequencePayloadBuilder:
+def build_sequence_builder(payload_spec: SequencePayloadConfig) -> SequencePayloadBuilder:
     """Build a sequence payload builder."""
 
-    data = payload_spec.model_dump(mode="python")
-    items = data.get("items")
-    if not isinstance(items, list) or not items:
-        raise PayloadBuildError("sequence payload requires a non-empty 'items' list")
-    encoding = str(data.get("encoding", "text"))
-    if encoding not in {"text", "json"}:
-        raise PayloadBuildError("sequence payload encoding must be 'text' or 'json'")
     return SequencePayloadBuilder(
-        items=list(items),
-        loop=bool(data.get("loop", True)),
-        encoding=encoding,
+        items=list(payload_spec.items),
+        loop=payload_spec.loop,
+        encoding=payload_spec.format,
     )
 
 
-def build_json_fields_builder(
-    payload_spec: PayloadSpec, *, rng: random.Random
-) -> JsonFieldsPayloadBuilder:
-    """Build a JSON-fields payload builder with stateful generators."""
+def build_json_builder(
+    payload_spec: JsonPayloadConfig,
+    *,
+    rng: random.Random,
+) -> JsonPayloadBuilder:
+    """Build a nested JSON payload builder with stateful generators."""
 
-    data = payload_spec.model_dump(mode="python")
-    raw_fields = data.get("fields")
-    if not isinstance(raw_fields, list) or not raw_fields:
-        raise PayloadBuildError(
-            "json_fields payload requires a non-empty 'fields' list"
-        )
-    fields: list[JsonFieldRuntime] = []
-    for raw_field in raw_fields:
-        try:
-            field_spec = JsonFieldSpec.model_validate(raw_field)
-        except Exception as exc:
-            raise PayloadBuildError(f"Invalid json_fields field spec: {exc}") from exc
-        field_rng = random.Random(rng.random())
-        generator = build_value_generator(field_spec.generator, rng=field_rng)
-        fields.append(JsonFieldRuntime(name=field_spec.name, generator=generator))
-    return JsonFieldsPayloadBuilder(fields=fields)
+    root = _compile_json_object(payload_spec.root, rng=rng)
+    return JsonPayloadBuilder(root=root)
+
+
+def build_payload_builder(
+    payload: PayloadConfig,
+    *,
+    config_dir: Path,
+    rng: random.Random,
+) -> PayloadBuilder:
+    """Build the correct payload builder from an inline payload config."""
+
+    kind = payload.kind
+    spec = payload.spec
+
+    if kind == "text":
+        assert isinstance(spec, TextPayloadConfig)
+        return build_text_builder(spec)
+    if kind == "json":
+        assert isinstance(spec, JsonPayloadConfig)
+        return build_json_builder(spec, rng=rng)
+    if kind == "sequence":
+        assert isinstance(spec, SequencePayloadConfig)
+        return build_sequence_builder(spec)
+    if kind == "bytes":
+        assert isinstance(spec, BytesPayloadConfig)
+        return build_bytes_builder(spec)
+    if kind == "file":
+        assert isinstance(spec, FilePayloadConfig)
+        return build_file_builder(spec, config_dir=config_dir, kind="file")
+    if kind == "pickle":
+        assert isinstance(spec, PicklePayloadConfig)
+        return build_file_builder(spec, config_dir=config_dir, kind="pickle")
+    raise PayloadBuildError(f"Unsupported payload kind: {kind}")
+
+
+def _compile_json_object(value: dict[str, Any], *, rng: random.Random) -> JsonObjectNode:
+    """Compile one JSON object mapping into nested runtime nodes."""
+
+    return JsonObjectNode(
+        fields={
+            key: _compile_json_node(item, rng=random.Random(rng.random()))
+            for key, item in value.items()
+        }
+    )
+
+
+def _compile_json_node(value: Any, *, rng: random.Random) -> JsonNode:
+    """Compile one validated JSON value into a runtime node."""
+
+    if isinstance(value, dict):
+        if len(value) == 1 and next(iter(value)) in {
+            "toggle",
+            "pick",
+            "seq",
+            "walk",
+            "random",
+            "expr",
+            "time",
+            "uuid",
+            "counter",
+            "null",
+        }:
+            return JsonGeneratorNode(generator=build_value_generator(value, rng=rng))
+        return _compile_json_object(value, rng=rng)
+    return JsonConstantNode(value=value)

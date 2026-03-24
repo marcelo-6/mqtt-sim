@@ -20,7 +20,7 @@ def preview_payload(payload: bytes | str | dict[str, Any], payload_kind: str) ->
     Binary payloads are summarized as metadata rather than rendered directly.
     """
 
-    if payload_kind == "pickle_file" and isinstance(payload, bytes):
+    if payload_kind == "pickle" and isinstance(payload, bytes):
         return f"<pickle {len(payload)}B>"
     if payload_kind in {"bytes", "file"} and isinstance(payload, bytes):
         return f"<bytes {len(payload)}B>"
