@@ -106,14 +106,14 @@ class TableRenderer:
             pad_edge=False,
         )
 
-        table.add_column("Topic", style="cyan", overflow="ellipsis", ratio=2)
+        table.add_column("Topic", style="cyan", overflow="ellipsis")
         table.add_column("State", style="white", no_wrap=True)
-        table.add_column("Schedule", style="magenta", overflow="ellipsis", ratio=1)
+        table.add_column("Schedule", style="magenta", overflow="ellipsis")
         table.add_column(
             "Count", style="bold bright_green", justify="right", no_wrap=True
         )
         table.add_column("Last Pub.", style="bright_black", no_wrap=True)
-        table.add_column("Payload", style="white", overflow="ellipsis", ratio=3)
+        table.add_column("Payload", style="white", overflow="ellipsis", ratio=2)
         table.add_column("Error", style="bright_red", overflow="ellipsis", ratio=None)
 
         for s in snapshot.streams:
@@ -131,11 +131,11 @@ class TableRenderer:
 
         title = Text("MQTT Simulator", style="bold bright_white")
         title.append("  ")
-        title.append(f"streams={streams}", style="bold cyan")
-        title.append("  ")
-        title.append(f"published={pub}", style="bold bright_green")
-        title.append("  ")
-        title.append(f"errors={err}", style="bold bright_red" if err else "bold green")
+        title.append(f"{streams} streams", style="bold cyan")
+        title.append(" | ")
+        title.append(f"{pub} published", style="bold bright_green")
+        title.append(" | ")
+        title.append(f"{err} errors", style="bold bright_red" if err else "bold green")
         return title
 
     def _build_caption(self, snapshot) -> Text:
