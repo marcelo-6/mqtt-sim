@@ -1,0 +1,27 @@
+config_version = 1
+name = "Basic Device Status"
+seed = 42
+
+[brokers.main]
+host = "localhost"
+port = 1883
+
+[clients.main]
+broker = "main"
+id = "sim-${device_id}"
+
+[[streams]]
+name = "device_status"
+client = "main"
+topic = "devices/${device_id}/status"
+every = "1s"
+
+[streams.expand]
+device_id = { range = [1, 3] }
+
+[streams.payload.json]
+device_id = "${device_id}"
+ok = { toggle = true }
+temperature_c = { random = { type = "float", min = 18, max = 32, precision = 1 } }
+battery_pct = { walk = { type = "int", min = 40, max = 100, step = 1, start = 98 } }
+ts = { time = "unix" }

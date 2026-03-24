@@ -35,7 +35,7 @@ def version() -> None:
 @app.command()
 def validate(
     config: Path = typer.Option(
-        ..., "--config", "-c", help="Path to JSON config file."
+        ..., "--config", "-c", help="Path to TOML config file."
     ),
     verbose: bool = typer.Option(
         False, "--verbose", help="Enable verbose file logging."
@@ -64,7 +64,7 @@ def validate(
 @app.command()
 def run(
     config: Path = typer.Option(
-        ..., "--config", "-c", help="Path to JSON config file."
+        ..., "--config", "-c", help="Path to TOML config file."
     ),
     output: str = typer.Option(
         "auto", "--output", help="Output mode: auto, table, or log."
@@ -110,11 +110,11 @@ def run(
 
         prepared = prepare_simulation(config, seed=seed, logger=logger)
 
-        def adapter_factory(broker_config):
-            return PahoBrokerAdapter(broker_config, logger=logger)
+        def adapter_factory(client_config):
+            return PahoBrokerAdapter(client_config, logger=logger)
 
         engine = SimulationEngine(
-            brokers=prepared.brokers,
+            clients=prepared.clients,
             streams=prepared.streams,
             adapter_factory=adapter_factory,
             renderer=renderer,
