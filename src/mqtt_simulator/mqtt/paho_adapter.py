@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import threading
 
 import paho.mqtt.client as mqtt
 
-from ..config.models import BrokerConfig
 from ..errors import BrokerConnectionError, BrokerPublishError
+from ..runtime.models import RuntimeClient
 from .adapter import PublishResult
 
 
@@ -19,11 +20,12 @@ class PahoBrokerAdapter:
     with ``asyncio.to_thread``.
     """
 
-    def __init__(self, broker: BrokerConfig, *, logger: logging.Logger) -> None:
-        """Initialize the adapter for one broker config."""
+    def __init__(self, client: RuntimeClient, *, logger: logging.Logger) -> None:
+        """Initialize the adapter for one resolved client session."""
 
-        self._broker = broker
-        self._logger = logger.getChild(f"mqtt.{broker.name}")
+        self._runtime_client = client
+        self._broker = client.broker
+        self._logger = logger.getChild(f"mqtt.{client.client_id}")
         self._client: mqtt.Client | None = None
         self._connected_event = threading.Event()
         self._connect_rc: int | None = None
@@ -34,21 +36,63 @@ class PahoBrokerAdapter:
         await asyncio.to_thread(self._connect_blocking)
 
     def _connect_blocking(self) -> None:
+        protocol = mqtt.MQTTv5 if self._broker.protocol == "5.0" else mqtt.MQTTv311
+        client_kwargs = {
+            "callback_api_version": mqtt.CallbackAPIVersion.VERSION2,
+            "client_id": self._runtime_client.client_id,
+            "protocol": protocol,
+            "transport": self._broker.transport,
+        }
+        if protocol != mqtt.MQTTv5:
+            client_kwargs["clean_session"] = self._runtime_client.clean_session
         client = mqtt.Client(
-            callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
-            client_id=self._broker.client_id or "",
+            **client_kwargs,
         )
-        if self._broker.username:
-            client.username_pw_set(self._broker.username, self._broker.password)
+        if self._broker.auth is not None:
+            password = self._broker.auth.password
+            if password is None and self._broker.auth.password_env:
+                password = os.getenv(self._broker.auth.password_env)
+                if password is None:
+                    raise BrokerConnectionError(
+                        "Missing broker password from environment variable "
+                        f"'{self._broker.auth.password_env}' for broker '{self._broker.name}'."
+                    )
+            client.username_pw_set(self._broker.auth.username, password)
+        if self._broker.tls is not None and self._broker.tls.enabled:
+            client.tls_set(
+                ca_certs=self._broker.tls.ca_file,
+                certfile=self._broker.tls.cert_file,
+                keyfile=self._broker.tls.key_file,
+            )
+            if self._broker.tls.insecure:
+                client.tls_insecure_set(True)
+        will_message = self._runtime_client.lifecycle.get("will")
+        if will_message is not None:
+            build_result = will_message.payload_builder.build()
+            client.will_set(
+                will_message.topic,
+                payload=build_result.payload_bytes,
+                qos=will_message.qos,
+                retain=will_message.retain,
+            )
         client.on_connect = self._on_connect
         client.on_disconnect = self._on_disconnect
         self._client = client
 
         try:
-            client.connect(self._broker.host, self._broker.port, self._broker.keepalive)
+            if protocol == mqtt.MQTTv5:
+                client.connect(
+                    self._broker.host,
+                    self._broker.port,
+                    self._broker.keepalive,
+                    clean_start=self._runtime_client.clean_session,
+                )
+            else:
+                client.connect(self._broker.host, self._broker.port, self._broker.keepalive)
         except Exception as exc:  # pragma: no cover - network-dependent
             raise BrokerConnectionError(
-                f"Failed to connect to broker '{self._broker.name}' "
+                "Failed to connect client "
+                f"'{self._runtime_client.client_id}' to broker '{self._broker.name}' "
                 f"({self._broker.host}:{self._broker.port}): {exc}"
             ) from exc
 
