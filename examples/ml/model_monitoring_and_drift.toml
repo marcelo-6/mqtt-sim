@@ -1,0 +1,99 @@
+# Example: Model Monitoring and Drift
+# Captures model-health style signals such as drift, feature statistics, distributions, and alerting.
+# Comments point out the important pieces so you can copy just the parts you need.
+# Full schema reference: https://github.com/marcelo-6/mqtt-sim/tree/main/docs/configuration.md
+
+config_version = 1
+name = "Model Monitoring and Drift"
+
+# Broker connection settings. Omit `port` here because the default MQTT port is already 1883.
+[brokers.main]
+host = "localhost"
+
+# Most examples keep a single named client to stay compact and easy to edit.
+[clients.main]
+broker = "main"
+id = "ml-model-monitoring-and-drift-sim"
+
+
+# Stream: drift_score
+# Topic: ml/monitoring/drift/score
+[[streams]]
+name = "drift_score"
+client = "main"
+topic = "ml/monitoring/drift/score"
+every = "2s"
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Sample `psi_score` randomly inside a plausible range for this kind of telemetry.
+psi_score = { random = { type = "float", min = 0.01, max = 0.45, precision = 3 } }
+# Choose `severity` from a small set of named states or labels on each publish.
+severity = { pick = ["low", "low", "medium", "high"] }
+
+
+# Stream: feature_stats
+# Topic: ml/monitoring/features/summary
+[[streams]]
+name = "feature_stats"
+client = "main"
+topic = "ml/monitoring/features/summary"
+every = "2500ms"
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Recompute `feature_mean` from the previous value so it drifts smoothly instead of jumping around.
+feature_mean = { expr = "(prev or 0.42) + uniform(-0.02, 0.02)" }
+# Sample `feature_std` randomly inside the configured range on each publish.
+feature_std = { random = { type = "float", min = 0.05, max = 0.18, precision = 3 } }
+
+
+# Stream: prediction_distribution
+# Topic: ml/monitoring/prediction/distribution
+[[streams]]
+name = "prediction_distribution"
+client = "main"
+topic = "ml/monitoring/prediction/distribution"
+every = "1500ms"
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Pick a value for `top_class` from the configured list each time this stream publishes.
+top_class = { pick = ["ok", "warning", "fault-a", "fault-b"] }
+# Sample `top_class_ratio` randomly inside a plausible range for this kind of telemetry.
+top_class_ratio = { random = { type = "float", min = 0.3, max = 0.95, precision = 3 } }
+
+
+# Stream: route_mix
+# Topic: ml/monitoring/router/mix
+[[streams]]
+name = "route_mix"
+client = "main"
+topic = "ml/monitoring/router/mix"
+every = "1800ms"
+retain = true
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Choose `route` from a small set of named states or labels on each publish.
+route = { pick = ["prod", "prod", "canary"] }
+# Pick a value for `canary_pct` from the configured list each time this stream publishes.
+canary_pct = { pick = [5, 10, 15, 20] }
+
+
+# Stream: alert_state
+# Topic: ml/monitoring/alerts/state
+[[streams]]
+name = "alert_state"
+client = "main"
+topic = "ml/monitoring/alerts/state"
+every = "3s"
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Pick a value for `active` from the configured list each time this stream publishes.
+active = { pick = [false, false, true] }
+# Choose `alert_code` from a small set of named states or labels on each publish.
+alert_code = { pick = ["NONE", "NONE", "DRIFT_WARN", "LATENCY_HIGH"] }
+# Stamp `ts` with the current ISO8601 time for human-friendly debugging.
+ts = { time = "iso" }

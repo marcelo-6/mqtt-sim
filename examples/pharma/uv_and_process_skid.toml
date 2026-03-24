@@ -1,0 +1,93 @@
+# Example: UV and Process Skid
+# Represents a process skid with UV absorbance, process temperatures, flow rates, and skid state machines.
+# Comments point out the important pieces so you can copy just the parts you need.
+# Full schema reference: https://github.com/marcelo-6/mqtt-sim/tree/main/docs/configuration.md
+
+config_version = 1
+name = "UV and Process Skid"
+
+# Broker connection settings. Omit `port` here because the default MQTT port is already 1883.
+[brokers.main]
+host = "localhost"
+
+# Most examples keep a single named client to stay compact and easy to edit.
+[clients.main]
+broker = "main"
+id = "pharma-uv-and-process-skid-sim"
+
+
+# Stream: uv_absorbance
+# Topic: pharma/skid-b/analytics/uv
+[[streams]]
+name = "uv_absorbance"
+client = "main"
+topic = "pharma/skid-b/analytics/uv"
+every = "1s"
+qos = 1
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Sample `uv_au` randomly inside a plausible range for this kind of telemetry.
+uv_au = { random = { type = "float", min = 0.01, max = 1.5, precision = 3 } }
+# Keep `wavelength_nm` fixed for this stream so the other fields carry the variation.
+wavelength_nm = 280
+
+
+# Stream: process_temp
+# Topic: pharma/skid-b/process/temperature
+[[streams]]
+name = "process_temp"
+client = "main"
+topic = "pharma/skid-b/process/temperature"
+every = "1100ms"
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Recompute `temp_c` from the previous value so it drifts smoothly instead of jumping around.
+temp_c = { expr = "(prev or 22.5) + uniform(-0.1, 0.1)" }
+
+
+# Stream: process_flow_rate
+# Topic: pharma/skid-b/process/flow-rate
+[[streams]]
+name = "process_flow_rate"
+client = "main"
+topic = "pharma/skid-b/process/flow-rate"
+every = "900ms"
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Sample `flow_lpm` randomly inside a plausible range for this kind of telemetry.
+flow_lpm = { random = { type = "float", min = 1.0, max = 12.0, precision = 2 } }
+
+
+# Stream: skid_a_status
+# Topic: pharma/skid-a/state-machine
+[[streams]]
+name = "skid_a_status"
+client = "main"
+topic = "pharma/skid-a/state-machine"
+every = "2s"
+retain = true
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Step `state` through a repeating sequence so this stream follows a recognizable progression.
+state = { seq = ["idle", "setup", "running", "running", "hold"] }
+
+
+# Stream: skid_b_status
+# Topic: pharma/skid-b/state-machine
+[[streams]]
+name = "skid_b_status"
+client = "main"
+topic = "pharma/skid-b/state-machine"
+every = "2s"
+retain = true
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Step `state` through a repeating sequence so this stream follows a recognizable progression.
+state = { seq = ["idle", "setup", "running", "alarm", "recover"] }
+# Choose `code` from a small set of named states or labels on each publish.
+code = { pick = ["NONE", "NONE", "P102", "V205"] }

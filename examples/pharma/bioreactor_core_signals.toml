@@ -1,0 +1,93 @@
+# Example: Bioreactor Core Signals
+# Simulates core bioreactor process signals such as temperature, pH, dissolved oxygen, agitation, and batch state.
+# Comments point out the important pieces so you can copy just the parts you need.
+# Full schema reference: https://github.com/marcelo-6/mqtt-sim/tree/main/docs/configuration.md
+
+config_version = 1
+name = "Bioreactor Core Signals"
+
+# Broker connection settings. Omit `port` here because the default MQTT port is already 1883.
+[brokers.main]
+host = "localhost"
+
+# Most examples keep a single named client to stay compact and easy to edit.
+[clients.main]
+broker = "main"
+id = "pharma-bioreactor-core-signals-sim"
+
+
+# Stream: bioreactor_temperature
+# Topic: pharma/bioreactor-01/core/temperature
+[[streams]]
+name = "bioreactor_temperature"
+client = "main"
+topic = "pharma/bioreactor-01/core/temperature"
+every = "1s"
+qos = 1
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Recompute `temp_c` from the previous value so it drifts smoothly instead of jumping around.
+temp_c = { expr = "(prev or 37.0) + uniform(-0.08, 0.08)" }
+
+
+# Stream: bioreactor_ph
+# Topic: pharma/bioreactor-01/core/ph
+[[streams]]
+name = "bioreactor_ph"
+client = "main"
+topic = "pharma/bioreactor-01/core/ph"
+every = "1200ms"
+qos = 1
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Recompute `ph` from the previous value so it drifts smoothly instead of jumping around.
+ph = { expr = "(prev or 7.1) + uniform(-0.03, 0.03)" }
+
+
+# Stream: bioreactor_do
+# Topic: pharma/bioreactor-01/core/do
+[[streams]]
+name = "bioreactor_do"
+client = "main"
+topic = "pharma/bioreactor-01/core/do"
+every = "1100ms"
+qos = 1
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Sample `do_pct` randomly inside the configured range on each publish.
+do_pct = { random = { type = "float", min = 25, max = 75, precision = 1 } }
+
+
+# Stream: agitator_rpm
+# Topic: pharma/bioreactor-01/core/agitation
+[[streams]]
+name = "agitator_rpm"
+client = "main"
+topic = "pharma/bioreactor-01/core/agitation"
+every = "900ms"
+qos = 1
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Walk `rpm` through its configured range in fixed increments instead of pure random jumps.
+rpm = { walk = { type = "int", min = 80, max = 180, step = 10, start = 120 } }
+
+
+# Stream: bioreactor_state_machine
+# Topic: pharma/bioreactor-01/state-machine
+[[streams]]
+name = "bioreactor_state_machine"
+client = "main"
+topic = "pharma/bioreactor-01/state-machine"
+every = "2s"
+retain = true
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Step `state` through a repeating sequence so this stream follows a recognizable progression.
+state = { seq = ["idle", "prep", "inoculation", "growth", "harvest", "cip"] }
+# Generate a fresh unique identifier for `campaign_id` on every publish.
+campaign_id = { uuid = true }

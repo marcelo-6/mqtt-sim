@@ -1,577 +1,505 @@
 # Configuration
 
-This page documents the current JSON configuration schema used by the `mqtt-sim` CLI.
+This page documents the current TOML configuration schema used by the `mqtt-sim` CLI.
 
 Quick Navigation:
 [Quick Start](#quick-start) •
-[Root Schema](#root-schema) •
+[Top Level](#top-level) •
 [Brokers](#brokers) •
+[Protocol Notes](#protocol-notes) •
+[Clients](#clients) •
 [Streams](#streams) •
-[Expansion](#stream-expansion) •
-[Payload Kinds](#payload-kinds) •
-[`json_fields` Generators](#json_fields-generators) •
-[Validation & Troubleshooting](#validation--troubleshooting) •
-[Current Limits](#current-limits)
+[QoS and Retain](#qos-and-retain) •
+[Schedule Modes](#schedule-modes) •
+[Payload Types](#payload-types) •
+[JSON Generators](#json-generators)
 
 ## Quick Start
 
-Start with the shipped examples:
+Start with the TOML example:
 
-- [`examples/basic.json`](../examples/basic.json)
-- [`examples/many_streams.json`](../examples/many_streams.json)
-- [`examples/pickle_file.json`](../examples/pickle_file.json)
+- [`examples/basic.toml`](../examples/basic.toml)
+- The broader example library in [`examples/README.md`](../examples/README.md)
+  uses the same schema.
 
 Validate a config without connecting to a broker:
 
 ```shell
-uv run mqtt-sim validate -c examples/basic.json
+uv run mqtt-sim validate -c examples/basic.toml
 ```
 
 Run the simulator:
 
 ```shell
-uv run mqtt-sim run -c examples/basic.json
+uv run mqtt-sim run -c examples/basic.toml
 ```
 
 Minimal example:
 
-```json
-{
-  "schema_version": 1,
-  "brokers": [
-    {
-      "name": "main",
-      "host": "localhost",
-      "port": 1883
-    }
-  ],
-  "streams": [
-    {
-      "broker": "main",
-      "topic": "devices/{id}/status",
-      "interval": 1.0,
-      "expand": {
-        "kind": "range",
-        "var": "id",
-        "start": 1,
-        "stop": 3
-      },
-      "payload": {
-        "kind": "json_fields",
-        "fields": [
-          {
-            "name": "ok",
-            "generator": { "kind": "bool_toggle", "start": true }
-          },
-          {
-            "name": "temp",
-            "generator": {
-              "kind": "number_random",
-              "numeric_type": "float",
-              "min": 20,
-              "max": 35,
-              "precision": 1
-            }
-          }
-        ]
-      }
-    }
-  ]
-}
+```toml
+config_version = 1
+
+[brokers.main]
+host = "localhost"
+port = 1883
+
+[clients.main]
+broker = "main"
+id = "sim-${device_id}"
+
+[[streams]]
+client = "main"
+topic = "devices/${device_id}/status"
+every = "1s"
+
+[streams.expand]
+device_id = { range = [1, 3] }
+
+[streams.payload.json]
+device_id = "${device_id}"
+ok = { toggle = true }
+temperature_c = { random = { type = "float", min = 18, max = 32, precision = 1 } }
 ```
 
-## Root Schema
+## Top Level
 
-The root object has three required keys:
+The root config supports:
 
-| Key | Type | Required | Notes |
-| --- | --- | --- | --- |
-| `schema_version` | integer | yes | Must currently be `1` |
-| `brokers` | array | yes | Non-empty list of broker objects |
-| `streams` | array | yes | Non-empty list of stream templates |
+- `config_version = 1`
+- `name` optional
+- `seed` optional
+- `[brokers.<name>]`
+- `[clients.<name>]`
+- `[[streams]]`
 
-Validation notes:
-
-- `schema_version` must be exactly `1` in the current implementation.
-- `brokers` and `streams` must contain at least one item.
-- Unknown top-level keys are rejected.
+Unknown keys are rejected.
 
 ## Brokers
 
-Each broker object defines one MQTT connection target. Streams reference brokers by `name`.
+Brokers define MQTT transport and connection settings.
 
-### Broker Fields
+```toml
+[brokers.main]
+host = "localhost"
+port = 1883
+keepalive = 60
+protocol = "3.1.1"
+transport = "tcp"
 
-| Key | Type | Required | Default | Description |
-| --- | --- | --- | --- | --- |
-| `name` | string | yes | - | Unique broker identifier used by streams |
-| `host` | string | yes | - | Broker hostname or IP |
-| `port` | integer | no | `1883` | MQTT broker port |
-| `keepalive` | integer | no | `60` | MQTT keepalive seconds |
-| `client_id` | string | no | `null` | Optional MQTT client id |
-| `username` | string | no | `null` | Optional username |
-| `password` | string | no | `null` | Optional password |
+[brokers.main.auth]
+username = "demo"
+password_env = "MQTT_PASSWORD"
 
-### Broker Rules
+[brokers.main.tls]
+enabled = true
+ca_file = "/etc/mqtt/ca.pem"
+cert_file = "/etc/mqtt/client.crt"
+key_file = "/etc/mqtt/client.key"
+```
 
-- Broker names must be unique.
-- A stream that references an unknown broker fails validation before any network activity.
+Supported broker fields:
+
+- `host` required
+- `port` optional, default `1883`
+- `keepalive` optional, default `60`
+- `protocol` optional, `"3.1.1"` or `"5.0"`
+- `transport` optional, `"tcp"` or `"websockets"`
+- `auth` optional
+- `tls` optional
+
+## Protocol Notes
+
+The simulator can connect with either:
+
+- `protocol = "3.1.1"`
+- `protocol = "5.0"`
+
+> [!IMPORTANT]
+> Nothing in the current config schema is MQTT 5-only.
+> Stream publishing, lifecycle messages, QoS, retain, Last Will, TLS, and the
+> payload system all work with both MQTT `3.1.1` and MQTT `5.0`.
+>
+> In other words: using `qos = 1`, `qos = 2`, or `lifecycle.will` does not mean
+> you need `protocol = "5.0"`.
+
+So when should you set `protocol = "5.0"`?
+
+- when your broker is configured for MQTT 5
+- when you want the simulator connection itself to use MQTT 5 semantics
+- when you are testing against infrastructure that expects MQTT 5 clients
+
+> [!NOTE]
+> The current schema does not expose MQTT 5-specific publish features like user
+> properties, message expiry, response topics, or MQTT 5 reason-code handling.
+> In practice, `protocol = "5.0"` is mostly about connection compatibility right
+> now, not extra per-message config knobs.
+
+One small naming detail:
+
+- `clean_session = true/false` is the config field in both protocols
+- under MQTT `3.1.1`, it is passed through as `clean_session`
+- under MQTT `5.0`, the simulator maps that same setting to the client's
+  `clean_start` behavior during connect
+
+## Clients
+
+Clients define MQTT session identity and optional lifecycle messages.
+
+```toml
+[clients.line_station]
+broker = "main"
+id = "line-${line_id}-cell-${cell_id}"
+clean_session = true
+
+[clients.line_station.lifecycle.online]
+topic = "plant/${line_id}/${cell_id}/lifecycle"
+retain = true
+qos = 1
+
+[clients.line_station.lifecycle.online.payload.json]
+state = "online"
+ts = { time = "unix" }
+```
+
+Supported client fields:
+
+- `broker` required, references `[brokers.<name>]`
+- `id` required
+- `clean_session` optional, default `true`
+- `lifecycle.online` optional
+- `lifecycle.offline` optional
+- `lifecycle.will` optional
+
+Lifecycle messages use the same inline payload formats as streams.
+
+> [!NOTE]
+> `qos` and `retain` inside lifecycle messages behave exactly like they do on
+> normal stream publishes. The only special part is when the message is sent.
+
+### Lifecycle behavior
+
+Lifecycle messages are about the MQTT client session itself, not one specific
+stream.
+
+- `lifecycle.online`
+  Published by `mqtt-sim` right after the client connects successfully.
+- `lifecycle.offline`
+  Published by `mqtt-sim` during a normal shutdown, before the client
+  disconnects.
+- `lifecycle.will`
+  Configures the broker-side MQTT Last Will and Testament message for that
+  client.
+
+That last one is the easy one to misunderstand:
+
+- `will` is not published by the simulator during normal startup or shutdown
+- `will` is registered with the broker before the client connects
+- if the client disappears unexpectedly, the broker publishes the `will`
+  message on the client's behalf
+- if the simulator shuts down cleanly, the `will` message is not sent
+
+That makes this a common pattern:
+
+```toml
+[clients.line_station.lifecycle.online]
+topic = "plant/${line_id}/${cell_id}/lifecycle"
+retain = true
+qos = 1
+
+[clients.line_station.lifecycle.online.payload.json]
+state = "online"
+ts = { time = "unix" }
+
+[clients.line_station.lifecycle.offline]
+topic = "plant/${line_id}/${cell_id}/lifecycle"
+retain = true
+qos = 1
+
+[clients.line_station.lifecycle.offline.payload.json]
+state = "offline"
+reason = "graceful-stop"
+ts = { time = "unix" }
+
+[clients.line_station.lifecycle.will]
+topic = "plant/${line_id}/${cell_id}/lifecycle"
+retain = true
+qos = 1
+
+[clients.line_station.lifecycle.will.payload.json]
+state = "offline"
+reason = "unexpected-disconnect"
+ts = { time = "unix" }
+```
+
+In plain English:
+
+- on connect, the simulator publishes `online`
+- on normal exit, the simulator publishes `offline/graceful-stop`
+- on a crash or broken connection, the broker publishes `offline/unexpected-disconnect`
 
 ## Streams
 
-A stream is a template for one or more publish streams. After optional expansion, each resolved stream
-publishes to one topic at a fixed interval.
+Each `[[streams]]` entry defines one publish template.
 
-### Stream Fields
+```toml
+[[streams]]
+name = "motor_telemetry"
+client = "line_station"
+topic = "plant/${line_id}/${cell_id}/motor"
+every = "500ms"
+mode = "fixed-rate"
+jitter = "75ms"
+qos = 1
 
-| Key | Type | Required | Default | Description |
-| --- | --- | --- | --- | --- |
-| `name` | string | no | `null` | Optional stream name used for internal ids |
-| `broker` | string | yes | - | Broker `name` to publish through |
-| `topic` | string | yes | - | MQTT topic or topic template |
-| `interval` | number | yes | - | Publish interval in seconds (`> 0`) |
-| `qos` | integer | no | `0` | MQTT QoS (`0`, `1`, `2`) |
-| `retain` | boolean | no | `false` | MQTT retain flag |
-| `payload` | object | yes | - | Payload spec (see [Payload Kinds](#payload-kinds)) |
-| `expand` | object | no | `null` | Optional stream expansion spec (see [Stream Expansion](#stream-expansion)) |
+[streams.expand]
+line_id = { list = ["line-a", "line-b"] }
+cell_id = { range = [1, 4] }
 
-### Topic and Payload Templating
+[streams.payload.json]
+line = "${line_id}"
+cell = "${cell_id}"
+rpm = { walk = { type = "int", min = 900, max = 1800, step = 50, start = 1100 } }
+current_a = { random = { type = "float", min = 2.0, max = 9.8, precision = 2 } }
+```
 
-The simulator applies `str.format(...)` templating using the stream expansion context:
+Supported stream fields:
 
-- `topic` is templated
-- string values inside `payload` are templated recursively
+- `name` optional
+- `client` required, references `[clients.<name>]`
+- `topic` required
+- `every` required
+- `mode` optional, `fixed-delay`, `fixed-rate`, or `burst`
+- `jitter` optional, not allowed for `burst`
+- `burst_count` required for `burst`
+- `burst_spacing` required for `burst`
+- `qos` optional, default `0`
+- `retain` optional, default `false`
+- `expand` optional
+- `payload` required
+
+### QoS and retain
+
+`qos` and `retain` control how the broker handles a publish after the simulator
+has built the payload.
+
+#### `qos`
+
+Allowed values are:
+
+- `0`
+  At most once. Fastest and cheapest. Good default for disposable telemetry.
+- `1`
+  At least once. The broker acknowledges the publish, so duplicates are
+  possible.
+- `2`
+  Exactly once. Strongest delivery guarantee, but also the most handshake
+  overhead.
+
+The simulator does not emulate the QoS flow itself. It passes the chosen QoS to
+the MQTT client library, and the client/broker perform the protocol-level
+delivery handshake.
+
+That means:
+
+- higher QoS usually means more reliability
+- higher QoS also means more protocol chatter and more latency
+- `qos = 1` or `qos = 2` can make fast streams feel less lightweight
 
 Example:
 
-```json
-{
-  "topic": "devices/{id}/status",
-  "expand": { "kind": "range", "var": "id", "start": 1, "stop": 3 },
-  "payload": { "kind": "text", "value": "hello-{id}" }
-}
+```toml
+[[streams]]
+client = "main"
+topic = "factory/alarm"
+every = "1s"
+qos = 1
+
+[streams.payload.json]
+state = "active"
 ```
 
-This resolves to topics `devices/1/status`, `devices/2/status`, `devices/3/status` and matching
-payload strings `hello-1`, `hello-2`, `hello-3`.
+`qos` also works on lifecycle messages:
 
-If a template references a missing variable, validation fails with an error such as:
-
-- `Missing template variable 'id' in stream template.`
-
-## Stream Expansion
-
-The current implementation supports one expansion spec per stream (`expand`), which means a stream can
-use either `range` or `list`, but not nested/cartesian expansion in a single stream.
-
-### `range` Expansion
-
-Expands one stream using an integer range.
-
-| Key | Type | Required | Default | Description |
-| --- | --- | --- | --- | --- |
-| `kind` | string | yes | - | Must be `"range"` |
-| `var` | string | yes | - | Template variable name |
-| `start` | integer | yes | - | Range start |
-| `stop` | integer | yes | - | Range stop |
-| `step` | integer | no | `1` | Step (must not be `0`) |
-| `inclusive` | boolean | no | `true` | Include the `stop` value if reachable |
-
-Notes:
-
-- Negative `step` values are supported.
-- `inclusive: true` is the default behavior.
-
-Example:
-
-```json
-{
-  "expand": {
-    "kind": "range",
-    "var": "id",
-    "start": 1,
-    "stop": 3
-  }
-}
+```toml
+[clients.line_station.lifecycle.will]
+topic = "plant/${line_id}/${cell_id}/lifecycle"
+qos = 1
+retain = true
 ```
 
-Resolves `id` values: `1`, `2`, `3`.
+#### `retain`
 
-### `list` Expansion
+When `retain = true`, the broker stores the last value for that topic and sends
+it to future subscribers as the retained message.
 
-Expands one stream using a list of values.
+Use retain when you want topics to represent the latest known state, for
+example:
 
-| Key | Type | Required | Default | Description |
-| --- | --- | --- | --- | --- |
-| `kind` | string | yes | - | Must be `"list"` |
-| `var` | string | yes | - | Template variable name |
-| `values` | array | yes | - | Non-empty list of values |
+- device online/offline state
+- current thermostat mode
+- latest station status
 
-Example:
+Avoid retain for purely event-like topics unless you really want new
+subscribers to immediately receive the last event again.
 
-```json
-{
-  "expand": {
-    "kind": "list",
-    "var": "site",
-    "values": ["north", "south", "west"]
-  }
-}
+> [!TIP]
+> A common pattern is:
+> `retain = true` for state topics and lifecycle topics,
+> `retain = false` for transient event streams.
+
+### Schedule Modes
+
+All schedule modes use `every` as the base timing value, but they behave
+differently once the simulator is running.
+
+#### `fixed-delay`
+
+This is the default.
+
+After one publish finishes, the simulator waits `every` seconds, applies any
+configured `jitter`, and then publishes again.
+
+Use this when you want a simple "publish, wait, publish, wait" loop.
+
+#### `fixed-rate`
+
+This mode tries to hold a steadier cadence.
+
+Instead of waiting `every` seconds after a publish completes, the next publish
+is scheduled from the previous due time. In other words, it aims for a clocked
+interval instead of a delay-after-work interval.
+
+That means:
+
+- `fixed-rate` is better for telemetry that should look sampled on a cadence
+- if a publish runs late, later publishes may happen with less idle time while
+  the scheduler catches back up
+- `jitter` still works here, and is applied per interval
+
+#### `burst`
+
+Burst mode sends several messages close together, then goes quiet until the
+next burst window.
+
+The fields mean:
+
+- `every`
+  Time from the start of one burst to the start of the next burst
+- `burst_count`
+  How many messages are emitted in each burst
+- `burst_spacing`
+  Delay between messages inside the burst
+
+So this:
+
+```toml
+[[streams]]
+topic = "plant/alarm"
+every = "10s"
+mode = "burst"
+burst_count = 3
+burst_spacing = "250ms"
 ```
 
-## Payload Kinds
+behaves like:
 
-Each stream has a `payload` object with a required `kind`. The payload object is kind-specific.
+- first message at `t = 0s`
+- second message at `t = 0.25s`
+- third message at `t = 0.50s`
+- next burst starts at `t = 10s`
+
+`burst` does not support `jitter`, because the burst already has its own timing.
+
+### Expansion
+
+Expansion is stream-local and cartesian when multiple variables are present.
+
+Supported operators:
+
+- `device_id = { range = [1, 3] }`
+- `device_id = { range = [1, 10, 2] }`
+- `site = { list = ["north", "south"] }`
+
+Templates use `${name}` syntax.
+
+## Payload Types
+
+Payloads are always inline and always typed by subtable name.
 
 ### `text`
 
-Publishes a UTF-8 string.
+```toml
+[streams.payload.text]
+value = "hello-${device_id}"
+```
 
-Required keys:
+### `json`
 
-- `kind: "text"`
-- `value` (string)
+```toml
+[streams.payload.json]
+device_id = "${device_id}"
+ok = { toggle = true }
 
-Example:
+[streams.payload.json.metrics]
+temp_c = { random = { type = "float", min = 18, max = 32, precision = 1 } }
+```
 
-```json
-{
-  "payload": {
-    "kind": "text",
-    "value": "hello world"
-  }
-}
+### `sequence`
+
+```toml
+[streams.payload.sequence]
+format = "json"
+loop = true
+items = [
+  { severity = "info", code = "none", active = false },
+  { severity = "critical", code = "e-stop", active = true },
+]
 ```
 
 ### `bytes`
 
-Publishes raw bytes from an inline string using one of three encodings.
-
-Required keys:
-
-- `kind: "bytes"`
-- `value` (string)
-
-Optional keys:
-
-- `encoding` (`"utf8"` default, `"hex"`, or `"base64"`)
-
-Examples:
-
-```json
-{ "kind": "bytes", "value": "hello", "encoding": "utf8" }
+```toml
+[streams.payload.bytes]
+hex = "504c414e542d4f4b"
 ```
 
-```json
-{ "kind": "bytes", "value": "68656c6c6f", "encoding": "hex" }
-```
+Exactly one of `utf8`, `hex`, or `base64` must be present.
 
 ### `file`
 
-Publishes file bytes as-is.
-
-Required keys:
-
-- `kind: "file"`
-- `path` (string path)
-
-Path behavior:
-
-- Absolute paths are supported.
-- Relative paths are resolved relative to the config file directory.
-
-### `pickle_file`
-
-Publishes a `.pkl` (or any file) as raw bytes.
-
-Required keys:
-
-- `kind: "pickle_file"`
-- `path` (string path)
-
-Important behavior:
-
-- The simulator **does not unpickle** the file.
-- The bytes are read and published as-is.
-- Table/log previews show metadata like `<pickle 1234B>` instead of raw bytes.
-
-### `sequence`
-
-Publishes values from a sequence in order.
-
-Required keys:
-
-- `kind: "sequence"`
-- `items` (non-empty array)
-
-Optional keys:
-
-- `encoding` (`"text"` default or `"json"`)
-- `loop` (`true` default)
-
-Behavior:
-
-- With `loop: true`, the sequence repeats.
-- With `loop: false`, the final item is reused after the sequence ends.
-
-### `json_fields`
-
-Builds a JSON object from a list of field generator definitions and publishes it as UTF-8 encoded JSON.
-
-Required keys:
-
-- `kind: "json_fields"`
-- `fields` (non-empty array)
-
-Each item in `fields` must contain:
-
-- `name` (string)
-- `generator` (object with `kind` and generator-specific keys)
-
-Example:
-
-```json
-{
-  "payload": {
-    "kind": "json_fields",
-    "fields": [
-      {
-        "name": "ok",
-        "generator": { "kind": "bool_toggle", "start": true }
-      },
-      {
-        "name": "temp",
-        "generator": {
-          "kind": "number_random",
-          "numeric_type": "float",
-          "min": 18,
-          "max": 28,
-          "precision": 1
-        }
-      }
-    ]
-  }
-}
+```toml
+[streams.payload.file]
+path = "fixtures/sample.bin"
 ```
 
-## `json_fields` Generators
+### `pickle`
 
-The following generator kinds are currently supported inside `json_fields[].generator`.
+```toml
+[streams.payload.pickle]
+path = "fixtures/sample.pkl"
+```
 
-### `const`
+`pickle` publishes raw file bytes. It does not unpickle.
 
-Always returns the same value.
+## JSON Generators
 
-Keys:
+Dynamic JSON field values are inline tables with exactly one operator.
 
-- `kind: "const"`
-- `value` (any JSON value)
+Supported operators:
 
-### `bool_toggle`
-
-Alternates `true`/`false` on each publish.
-
-Keys:
-
-- `kind: "bool_toggle"`
-- `start` (optional boolean, default `false`)
-
-### `number_walk`
-
-Walks a numeric value up/down between bounds and reverses direction at the edges.
-
-Keys:
-
-- `kind: "number_walk"`
-- `min` (number, default `0`)
-- `max` (number, default `100`)
-- `step` (number, default `1`, must be `> 0`)
-- `numeric_type` (`"float"` default or `"int"`)
-- `start` (optional number, defaults to `min`)
+- `{ toggle = true }`
+- `{ pick = ["idle", "running", "blocked"] }`
+- `{ seq = ["closed", "open"] }`
+- `{ walk = { type = "int", min = 0, max = 100, step = 5, start = 50 } }`
+- `{ random = { type = "float", min = 18, max = 32, precision = 1 } }`
+- `{ expr = "(prev or 42.0) + uniform(-0.2, 0.4)" }`
+- `{ time = "unix" }`
+- `{ uuid = true }`
+- `{ counter = { start = 0, step = 1 } }`
+- `{ null = true }`
 
 Notes:
 
-- `min` must be `<= max`.
-- `"int"` output is rounded to an integer before publishing.
-
-### `number_random`
-
-Returns a random number within a configured range.
-
-Keys:
-
-- `kind: "number_random"`
-- `min` (number, default `0`)
-- `max` (number, default `100`)
-- `numeric_type` (`"float"` default or `"int"`)
-- `precision` (optional integer, only useful for float mode)
-
-Notes:
-
-- `min` must be `<= max`.
-- `"int"` mode uses integer random sampling.
-
-### `choice`
-
-Returns one random item from a list.
-
-Keys:
-
-- `kind: "choice"`
-- `values` (non-empty array)
-
-### `sequence`
-
-Returns items in order, optionally looping.
-
-Keys:
-
-- `kind: "sequence"`
-- `values` (non-empty array)
-- `loop` (optional boolean, default `true`)
-
-### `expression`
-
-Evaluates an expression using a restricted `eval(...)` context. This is a flexible generator for derived values and stateful calculations.
-
-Keys:
-
-- `kind: "expression"`
-- `expression` (non-empty string)
-
-Available names in the expression context:
-
-- `prev` (previous generated value, starts as `null`/`None`)
-- `count` (number of generated values so far)
-- `random` (random float `0..1`)
-- `randint` (callable)
-- `uniform` (callable)
-- `time` (current UNIX time as float)
-- `math` (Python `math` module)
-
-Examples:
-
-```json
-{ "kind": "expression", "expression": "count * 10" }
-```
-
-```json
-{ "kind": "expression", "expression": "(prev or 20) + uniform(-0.3, 0.3)" }
-```
-
-Safety note:
-
-- This is **trusted-config functionality**. The implementation restricts builtins, but you should still treat expression configs as code-like input authored by trusted users.
-- See the [Expression Generator Guide](./math_expression.md) for a deeper walkthrough.
-
-### `timestamp`
-
-Returns the current time in ISO8601 or UNIX-seconds format.
-
-Keys:
-
-- `kind: "timestamp"`
-- `mode` (optional `"iso"` default or `"unix"`)
-
-### `uuid`
-
-Returns a UUID4 string.
-
-Keys:
-
-- `kind: "uuid"`
-
-## CLI Behavior
-
-The current CLI commands are:
-
-- `mqtt-sim version`
-- `mqtt-sim validate`
-- `mqtt-sim run`
-
-### `run` Options (Current)
-
-- `-c, --config PATH`
-- `--output auto|table|log`
-- `--seed INT`
-- `--duration FLOAT`
-- `--fail-fast / --keep-going`
-- `--verbose`
-
-### Output Modes
-
-- `auto` (default): chooses `table` on TTY and `log` when stdout is not a TTY
-- `table`: inline updating table (Rich)
-- `log`: line-based progress/errors
-
-Current table columns:
-
-- `TOPIC`
-- `STATE`
-- `INTERVAL`
-- `COUNT`
-- `LAST PUB`
-- `PAYLOAD`
-- `ERR`
-
-### Logging
-
-- File logging is enabled for CLI commands and runtime execution.
-- Default log path: `.mqtt-sim/logs/mqtt-sim.log`
-- `--verbose` increases file log detail and also enables more detail in log output mode.
-
-### Failure Policy
-
-- `--keep-going` (default): mark errored streams and continue others
-- `--fail-fast`: stop the run after the first stream error and return a non-zero exit code
-
-## Validation & Troubleshooting
-
-### Common Validation Errors
-
-Unknown broker reference:
-
-- A stream references a broker name not defined in `brokers`.
-
-Missing template variable:
-
-- A topic or payload string uses `{var}` but the stream expansion does not define `var`.
-
-Unsupported `kind`:
-
-- Payload/generator kinds are validated at runtime build time and will fail with a clear error if unsupported.
-
-Invalid list/range settings:
-
-- Empty `brokers`, `streams`, `fields`, `values`, or invalid `step`/bounds produce validation/build errors.
-
-### Useful Commands
-
-Validate examples:
-
-```shell
-uv run mqtt-sim validate -c examples/basic.json
-uv run mqtt-sim validate -c examples/many_streams.json
-uv run mqtt-sim validate -c examples/pickle_file.json
-```
-
-Inspect CLI help:
-
-```shell
-uv run mqtt-sim --help
-```
-
-Check logs after a run:
-
-```shell
-tail -n 100 .mqtt-sim/logs/mqtt-sim.log
-```
-
-## Current Limits
-
-The implementation is focused and does not currently include:
-
-- MQTT subscriber/viewer/client UI features
-- Cartesian or nested stream expansion (one `expand` spec per stream)
-- Plugin system for custom generators
-- Iinteractive table controls (sorting/filtering/hotkeys)
+- Arrays inside JSON payloads are constant-only in `config_version = 1`.
+- Templates use `${name}` syntax, not Python `str.format(...)`.
+- Unknown keys are rejected across the schema.

@@ -1,0 +1,97 @@
+# Example: Laundry Room
+# Simulates washer, dryer, leak sensor, and environmental telemetry for a laundry room.
+# Comments point out the important pieces so you can copy just the parts you need.
+# Full schema reference: https://github.com/marcelo-6/mqtt-sim/tree/main/docs/configuration.md
+
+config_version = 1
+name = "Laundry Room"
+
+# Broker connection settings. Omit `port` here because the default MQTT port is already 1883.
+[brokers.main]
+host = "localhost"
+
+# Most examples keep a single named client to stay compact and easy to edit.
+[clients.main]
+broker = "main"
+id = "appliances-laundry-room-sim"
+
+
+# Stream: washer_cycle
+# Topic: appliances/laundry/washer/cycle
+[[streams]]
+name = "washer_cycle"
+client = "main"
+topic = "appliances/laundry/washer/cycle"
+every = "1800ms"
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Step `state` through a repeating sequence so this stream follows a recognizable progression.
+state = { seq = ["idle", "fill", "wash", "rinse", "spin", "complete"] }
+# Step `minutes_remaining` through the configured range to mimic a countdown-style reading.
+minutes_remaining = { walk = { type = "int", min = 0, max = 70, step = 7, start = 70 } }
+
+
+# Stream: washer_vibration
+# Topic: appliances/laundry/washer/vibration
+[[streams]]
+name = "washer_vibration"
+client = "main"
+topic = "appliances/laundry/washer/vibration"
+every = "700ms"
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Sample `rms_g` randomly inside the configured range on each publish.
+rms_g = { random = { type = "float", min = 0.01, max = 0.8, precision = 3 } }
+# Pick a value for `imbalance` from the configured list each time this stream publishes.
+imbalance = { pick = ["none", "minor", "major"] }
+
+
+# Stream: dryer_cycle
+# Topic: appliances/laundry/dryer/cycle
+[[streams]]
+name = "dryer_cycle"
+client = "main"
+topic = "appliances/laundry/dryer/cycle"
+every = "2s"
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Step `state` through a repeating sequence so this stream follows a recognizable progression.
+state = { seq = ["idle", "heating", "drying", "cooldown", "complete"] }
+# Step `minutes_remaining` through the configured range to mimic a countdown-style reading.
+minutes_remaining = { walk = { type = "int", min = 0, max = 60, step = 6, start = 60 } }
+
+
+# Stream: dryer_temp
+# Topic: appliances/laundry/dryer/temperature
+[[streams]]
+name = "dryer_temp"
+client = "main"
+topic = "appliances/laundry/dryer/temperature"
+every = "1s"
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Sample `air_temp_c` randomly inside a plausible range for this kind of telemetry.
+air_temp_c = { random = { type = "float", min = 30, max = 78, precision = 1 } }
+# Flip `heater_on` between true and false on each publish.
+heater_on = { toggle = true }
+
+
+# Stream: leak_sensor
+# Topic: appliances/laundry/leak-sensor/state
+[[streams]]
+name = "leak_sensor"
+client = "main"
+topic = "appliances/laundry/leak-sensor/state"
+every = "2500ms"
+retain = true
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Pick a value for `leak_detected` from the configured list each time this stream publishes.
+leak_detected = { pick = [false, false, false, false, true] }
+# Walk `battery_pct` through its configured range to mimic a slowly changing battery reading.
+battery_pct = { walk = { type = "int", min = 30, max = 100, step = 1, start = 95 } }

@@ -1,0 +1,42 @@
+# Example: Environmental Conditions
+# Expands one template across multiple industrial zones to simulate ambient telemetry.
+# Comments point out the important pieces so you can copy just the parts you need.
+# Full schema reference: https://github.com/marcelo-6/mqtt-sim/tree/main/docs/configuration.md
+
+config_version = 1
+name = "Environmental Conditions"
+
+# Broker connection settings. Omit `port` here because the default MQTT port is already 1883.
+[brokers.main]
+host = "localhost"
+
+# Most examples keep a single named client to stay compact and easy to edit.
+[clients.main]
+broker = "main"
+id = "industrial-environmental-conditions-sim"
+
+
+# Stream: zone_environment
+# Topic: industrial/site-a/zone-${zone}/environment
+[[streams]]
+name = "zone_environment"
+client = "main"
+topic = "industrial/site-a/zone-${zone}/environment"
+every = "1200ms"
+
+# Expand this template into multiple concrete streams.
+[streams.expand]
+zone = { range = [1, 5] }
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Copy the expanded `zone` value into the payload so subscribers can see which instance this message belongs to.
+zone = "zone-${zone}"
+# Sample `temp_c` randomly inside a plausible range for this kind of telemetry.
+temp_c = { random = { type = "float", min = 18, max = 30, precision = 1 } }
+# Sample `humidity_pct` randomly inside a plausible range for this kind of telemetry.
+humidity_pct = { random = { type = "float", min = 30, max = 70, precision = 1 } }
+# Sample `pressure_kpa` randomly inside a plausible range for this kind of telemetry.
+pressure_kpa = { random = { type = "float", min = 98, max = 103, precision = 2 } }
+# Sample `noise_db` randomly inside a plausible range for this kind of telemetry.
+noise_db = { random = { type = "float", min = 48, max = 82, precision = 1 } }

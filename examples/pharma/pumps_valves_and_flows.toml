@@ -1,0 +1,100 @@
+# Example: Pumps, Valves, and Flows
+# Covers transfer equipment telemetry with pump pressure, valve states, line flow, and transfer progress.
+# Comments point out the important pieces so you can copy just the parts you need.
+# Full schema reference: https://github.com/marcelo-6/mqtt-sim/tree/main/docs/configuration.md
+
+config_version = 1
+name = "Pumps, Valves, and Flows"
+
+# Broker connection settings. Omit `port` here because the default MQTT port is already 1883.
+[brokers.main]
+host = "localhost"
+
+# Most examples keep a single named client to stay compact and easy to edit.
+[clients.main]
+broker = "main"
+id = "pharma-pumps-valves-and-flows-sim"
+
+
+# Stream: feed_pump_flow
+# Topic: pharma/skid-a/pumps/feed-01
+[[streams]]
+name = "feed_pump_flow"
+client = "main"
+topic = "pharma/skid-a/pumps/feed-01"
+every = "1s"
+qos = 1
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Sample `flow_lpm` randomly inside a plausible range for this kind of telemetry.
+flow_lpm = { random = { type = "float", min = 0.5, max = 4.5, precision = 2 } }
+# Choose `state` from a small set of named states or labels on each publish.
+state = { pick = ["running", "idle", "fault"] }
+
+
+# Stream: harvest_pump_flow
+# Topic: pharma/skid-a/pumps/harvest-01
+[[streams]]
+name = "harvest_pump_flow"
+client = "main"
+topic = "pharma/skid-a/pumps/harvest-01"
+every = "1100ms"
+qos = 1
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Sample `flow_lpm` randomly inside a plausible range for this kind of telemetry.
+flow_lpm = { random = { type = "float", min = 0.2, max = 3.0, precision = 2 } }
+# Walk `rpm` through its configured range in fixed increments instead of pure random jumps.
+rpm = { walk = { type = "int", min = 200, max = 1200, step = 100, start = 600 } }
+
+
+# Stream: valve_manifold
+# Topic: pharma/skid-a/valves/manifold
+[[streams]]
+name = "valve_manifold"
+client = "main"
+topic = "pharma/skid-a/valves/manifold"
+every = "1500ms"
+retain = true
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Pick a value for `valve_a` from the configured list each time this stream publishes.
+valve_a = { pick = ["open", "closed"] }
+# Pick a value for `valve_b` from the configured list each time this stream publishes.
+valve_b = { pick = ["open", "closed"] }
+# Choose `route` from a small set of named states or labels on each publish.
+route = { pick = ["feed", "harvest", "cip", "buffer"] }
+
+
+# Stream: line_pressure
+# Topic: pharma/skid-a/line/pressure
+[[streams]]
+name = "line_pressure"
+client = "main"
+topic = "pharma/skid-a/line/pressure"
+every = "800ms"
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Sample `pressure_bar` randomly inside a plausible range for this kind of telemetry.
+pressure_bar = { random = { type = "float", min = 0.8, max = 2.4, precision = 2 } }
+
+
+# Stream: transfer_state
+# Topic: pharma/skid-a/transfer/state-machine
+[[streams]]
+name = "transfer_state"
+client = "main"
+topic = "pharma/skid-a/transfer/state-machine"
+every = "2s"
+retain = true
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Step `state` through a repeating sequence so this stream follows a recognizable progression.
+state = { seq = ["idle", "prime", "transfer", "hold", "complete"] }
+# Pick a value for `active_recipe` from the configured list each time this stream publishes.
+active_recipe = { pick = ["media-a", "buffer-b", "cip-alkaline"] }

@@ -3,9 +3,9 @@ set -euo pipefail
 
 # scripts/generate-all-examples.sh
 #
-# For every *.json under ./examples/**, run scripts/cli-bulk-gif-gen.tape with:
-#   - $config = path to the json file
-#   - $output = docs/images/examples/<json_basename>.gif
+# For every *.toml under ./examples/**, run scripts/cli-bulk-gif-gen.tape with:
+#   - $config = path to the TOML file
+#   - $output = docs/images/examples/<config_basename>.gif
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd -P)"
@@ -33,14 +33,14 @@ mkdir -p "${OUT_DIR}"
 cd "${REPO_ROOT}"
 
 count=0
-while IFS= read -r -d '' json_file; do
-  base="$(basename -- "${json_file}" .json)"
+while IFS= read -r -d '' config_file; do
+  base="$(basename -- "${config_file}" .toml)"
   out_file="${OUT_DIR}/${base}.gif"
 
   echo "Generating: ${out_file}"
-  config="${json_file}" vhs -o "${out_file}" "${TAPE_FILE}"
+  config="${config_file}" vhs -o "${out_file}" "${TAPE_FILE}"
 
   count=$((count + 1))
-done < <(find "${EXAMPLES_DIR}" -type f -name '*.json' -print0 | sort -z)
+done < <(find "${EXAMPLES_DIR}" -type f -name '*.toml' -print0 | sort -z)
 
 echo "Done. Generated ${count} GIF(s) in: ${OUT_DIR}"

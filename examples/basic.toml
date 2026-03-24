@@ -1,27 +1,35 @@
+# Example: Basic Device Status
+# Smallest useful simulator config: one broker, one client, one expanding stream, and an inline JSON payload.
+# Comments point out the important pieces so you can copy just the parts you need.
+# Full schema reference: https://github.com/marcelo-6/mqtt-sim/tree/main/docs/configuration.md
+
 config_version = 1
 name = "Basic Device Status"
-seed = 42
 
+# Broker connection settings. Omit `port` here because the default MQTT port is already 1883.
 [brokers.main]
 host = "localhost"
-port = 1883
 
+# Most examples keep a single named client to stay compact and easy to edit.
 [clients.main]
 broker = "main"
-id = "sim-${device_id}"
+id = "basic-sim"
 
+
+# Stream: devices/{id}/status
+# Topic: devices/${id}/status
 [[streams]]
-name = "device_status"
 client = "main"
-topic = "devices/${device_id}/status"
+topic = "devices/${id}/status"
 every = "1s"
 
+# Expand this template into multiple concrete streams.
 [streams.expand]
-device_id = { range = [1, 3] }
+id = { range = [1, 3] }
 
+# Inline JSON payload for this stream.
 [streams.payload.json]
-device_id = "${device_id}"
+# Flip `ok` between true and false on each publish.
 ok = { toggle = true }
-temperature_c = { random = { type = "float", min = 18, max = 32, precision = 1 } }
-battery_pct = { walk = { type = "int", min = 40, max = 100, step = 1, start = 98 } }
-ts = { time = "unix" }
+# Sample `temperature` randomly inside a plausible range for this kind of telemetry.
+temperature = { random = { type = "float", min = 18, max = 32, precision = 3 } }

@@ -1,0 +1,42 @@
+# Example: Fitness Trackers
+# Expands one wearable template across multiple tracker IDs to generate fleet like telemetry.
+# Comments point out the important pieces so you can copy just the parts you need.
+# Full schema reference: https://github.com/marcelo-6/mqtt-sim/tree/main/docs/configuration.md
+
+config_version = 1
+name = "Fitness Trackers"
+
+# Broker connection settings. Omit `port` here because the default MQTT port is already 1883.
+[brokers.main]
+host = "localhost"
+
+# Most examples keep a single named client to stay compact and easy to edit.
+[clients.main]
+broker = "main"
+id = "wearables-fitness-trackers-sim"
+
+
+# Stream: fitness_tracker_stream
+# Topic: wearables/${device}/fitness
+[[streams]]
+name = "fitness_tracker_stream"
+client = "main"
+topic = "wearables/${device}/fitness"
+every = "1s"
+
+# Expand this template into multiple concrete streams.
+[streams.expand]
+device = { list = ["ft-001", "ft-002", "ft-003", "ft-004", "ft-005"] }
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Copy the expanded `device_id` value into the payload so subscribers can see which instance this message belongs to.
+device_id = "${device}"
+# Sample `heart_rate_bpm` randomly inside the configured range on each publish.
+heart_rate_bpm = { random = { type = "int", min = 58, max = 165 } }
+# Recompute `steps` from the previous value so it keeps accumulating over time.
+steps = { expr = "(prev or 0) + randint(0, 18)" }
+# Recompute `calories_kcal` from the previous value so it keeps accumulating over time.
+calories_kcal = { expr = "(prev or 0) + uniform(0, 1.5)" }
+# Walk `battery_pct` through its configured range to mimic a slowly changing battery reading.
+battery_pct = { walk = { type = "int", min = 20, max = 100, step = 1, start = 100 } }

@@ -1,0 +1,101 @@
+# Example: Chunked Transfer Simulation
+# Models a chunked file transfer workflow with start events, chunk metadata, raw chunk bytes, ACKs, and completion.
+# Comments point out the important pieces so you can copy just the parts you need.
+# Full schema reference: https://github.com/marcelo-6/mqtt-sim/tree/main/docs/configuration.md
+
+config_version = 1
+name = "Chunked Transfer Simulation"
+
+# Broker connection settings. Omit `port` here because the default MQTT port is already 1883.
+[brokers.main]
+host = "localhost"
+
+# Most examples keep a single named client to stay compact and easy to edit.
+[clients.main]
+broker = "main"
+id = "file-transfer-chunked-transfer-simulation-sim"
+
+
+# Stream: session_start
+# Topic: file-transfer/chunked/session/start
+[[streams]]
+name = "session_start"
+client = "main"
+topic = "file-transfer/chunked/session/start"
+every = "5s"
+qos = 1
+
+# Sequence payload: cycles through known values to emulate a deterministic event flow.
+[streams.payload.sequence]
+format = "json"
+items = [
+  { session = "s-1001", event = "start", chunks = 4 },
+  { session = "s-1002", event = "start", chunks = 4 },
+  { session = "s-1003", event = "start", chunks = 4 },
+]
+
+
+# Stream: chunk_metadata
+# Topic: file-transfer/chunked/session/chunk-meta
+[[streams]]
+name = "chunk_metadata"
+client = "main"
+topic = "file-transfer/chunked/session/chunk-meta"
+every = "1s"
+qos = 1
+
+# Inline JSON payload for this stream.
+[streams.payload.json]
+# Step `chunk_index` through a repeating sequence so this stream follows a recognizable progression.
+chunk_index = { seq = [1, 2, 3, 4] }
+# Keep `chunk_size_bytes` fixed for this stream so the other fields carry the variation.
+chunk_size_bytes = 256
+# Stamp `ts` with the current UNIX time so subscribers can track freshness.
+ts = { time = "unix" }
+
+
+# Stream: chunk_payload_bytes
+# Topic: file-transfer/chunked/session/chunk-bytes
+[[streams]]
+name = "chunk_payload_bytes"
+client = "main"
+topic = "file-transfer/chunked/session/chunk-bytes"
+every = "1s"
+qos = 1
+
+# Reads raw bytes from a fixture file on disk.
+[streams.payload.file]
+path = "../data/firmware_chunk_001.bin"
+
+
+# Stream: chunk_ack
+# Topic: file-transfer/chunked/session/ack
+[[streams]]
+name = "chunk_ack"
+client = "main"
+topic = "file-transfer/chunked/session/ack"
+every = "1s"
+
+# Sequence payload: cycles through known values to emulate a deterministic event flow.
+[streams.payload.sequence]
+format = "json"
+items = [
+  { chunk = 1, ack = true },
+  { chunk = 2, ack = true },
+  { chunk = 3, ack = true },
+  { chunk = 4, ack = true },
+]
+
+
+# Stream: session_complete
+# Topic: file-transfer/chunked/session/complete
+[[streams]]
+name = "session_complete"
+client = "main"
+topic = "file-transfer/chunked/session/complete"
+every = "5s"
+retain = true
+
+# Plain UTF-8 text payload.
+[streams.payload.text]
+value = "transfer-complete"
