@@ -6,12 +6,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0] - 2026-03-24
+
+The highlight of this changes is that config files are now TOML instead of JSON. The old JSON examples are gone, the schema is stricter, and the simulator now has a much nicer foundation for real-world setups like multiple clients, lifecycle messages, richer schedules, and inline payload generators.
+
+### <!-- 0 -->Features
+- Switch commands and examples to the TOML  ([79fdee6](https://github.com/marcelo-6/mqtt-sim/commit/79fdee6c572bc1921deb6c428feed207015af61d))
+
+- Add session scheduling and lifecycle publishing  ([b1c2e65](https://github.com/marcelo-6/mqtt-sim/commit/b1c2e6517a92fa3fe5b58c9944da2f038d3d7a75))
+
+- Add inline payload builders and generator  ([88d8053](https://github.com/marcelo-6/mqtt-sim/commit/88d8053d7a0172c5cd7292e61fe587f75adecb8a))
+
+- Resolve toml expansion, and client sessions  ([40fc86c](https://github.com/marcelo-6/mqtt-sim/commit/40fc86c6ab7a5e7f251a2ea8ee8fe5dbced14533))
+
+- Add TOML schema models and loader  ([618dc86](https://github.com/marcelo-6/mqtt-sim/commit/618dc86cb02b64543d7c2d185abeda3be49b591c))
+
+
+### <!-- 1 -->Bug Fixes
+- Make the live table topic column size more predictable  ([4a418a3](https://github.com/marcelo-6/mqtt-sim/commit/4a418a38253b3480b4a8d4c15fb9057e2d0df65e))
+
+
+### <!-- 3 -->Documentation
+- Rewrite public docs for the TOML schema  ([72d939e](https://github.com/marcelo-6/mqtt-sim/commit/72d939e4725ca9d4c39595dadb0967d50f129389))
+
+- Update README badges  by @marcelo-6 ([a94f914](https://github.com/marcelo-6/mqtt-sim/commit/a94f914e7f551e340f621609a03a021f4d9a78d1))
+
+
+### <!-- 6 -->Testing
+- Set coverage threshold to 65  ([bb271d2](https://github.com/marcelo-6/mqtt-sim/commit/bb271d27de0929f065ccf52b8151e756c09bfa08))
+
+
+### <!-- 7 -->Miscellaneous Tasks
+- Update the development status classifier to Production/Stable  ([3e3c394](https://github.com/marcelo-6/mqtt-sim/commit/3e3c394dce7524e1358c2e2e2c3513e3eca749b5))
+
+- Bump docker/setup-buildx-action from 3 to 4  by @dependabot[bot] in [#26](https://github.com/marcelo-6/mqtt-sim/pull/26) ([5881202](https://github.com/marcelo-6/mqtt-sim/commit/5881202e3ba91a313fa1d5d7cfc1ff62f37d30bf))
+
+- Bump docker/metadata-action from 5 to 6  by @dependabot[bot] in [#25](https://github.com/marcelo-6/mqtt-sim/pull/25) ([baeec14](https://github.com/marcelo-6/mqtt-sim/commit/baeec14327548cfd8acf2e54c6084ec6f87d6173))
+
+- Bump docker/login-action from 3 to 4  by @dependabot[bot] in [#27](https://github.com/marcelo-6/mqtt-sim/pull/27) ([f94dc4b](https://github.com/marcelo-6/mqtt-sim/commit/f94dc4b9d7ed7451ab6a6a730433a5df9bba4994))
+
+- Bump docker/build-push-action from 6 to 7  by @dependabot[bot] in [#28](https://github.com/marcelo-6/mqtt-sim/pull/28) ([1dd97cb](https://github.com/marcelo-6/mqtt-sim/commit/1dd97cb6cf4b5d02f3fded3fcfa9a82c61c79810))
+
+
+### New Contributors
+* @dependabot[bot] made their first contribution in [#26](https://github.com/marcelo-6/mqtt-sim/pull/26)
+
 ## [0.0.1] - 2026-02-25
 
 ### <!-- 0 -->Features
-- Add package/docker publish workflows and tag-driven release workflow  ([6f59fca](https://github.com/marcelo-6/mqtt-sim/commit/6f59fcac6259e1391a2e3fd0df2d4260359efcb5))
+- Add package/docker publish workflows and tag-driven release workflow  by @marcelo-6 ([6d7c41d](https://github.com/marcelo-6/mqtt-sim/commit/6d7c41d7895b12174ad2c6ec9b13dd58486c7646))
 
-- Add changelog tooling, release helper, and release notes extractor  ([7651350](https://github.com/marcelo-6/mqtt-sim/commit/7651350933ca6688642e1fe93dafcb1b48e261c3))
+- Add changelog tooling, release helper, and release notes extractor  by @marcelo-6 ([63aa28e](https://github.com/marcelo-6/mqtt-sim/commit/63aa28efaa4c1c672929fa60ec79cc8e893681af))
 
 - Add compose with local mosquitto broker  by @marcelo-6 ([d9969a5](https://github.com/marcelo-6/mqtt-sim/commit/d9969a5735390efbaea8bcb3d980973c2ea904d3))
 
@@ -43,7 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### <!-- 3 -->Documentation
-- Add release guide  ([6105e1b](https://github.com/marcelo-6/mqtt-sim/commit/6105e1bcba4277fca4e6accc982c68107b361fee))
+- Add release guide  by @marcelo-6 ([e91fefc](https://github.com/marcelo-6/mqtt-sim/commit/e91fefc3bf886b4e424649f057ca2b448aee5016))
 
 - Format readme and add mqttui gif  by @marcelo-6 in [#16](https://github.com/marcelo-6/mqtt-sim/pull/16) ([97098e0](https://github.com/marcelo-6/mqtt-sim/commit/97098e0305d773dfb70d27fb3b72ae525cd0f709))
 
@@ -63,7 +108,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### <!-- 6 -->Testing
-- Add changelog extraction tests  ([70c3184](https://github.com/marcelo-6/mqtt-sim/commit/70c3184c7459ed4960dbd5720a27409d1545d0e1))
+- Add changelog extraction tests  by @marcelo-6 ([890007d](https://github.com/marcelo-6/mqtt-sim/commit/890007dc67b9d1859636d1b9a923917048de38cb))
 
 - Updated coverage to 70%  by @marcelo-6 ([bf9b6e1](https://github.com/marcelo-6/mqtt-sim/commit/bf9b6e11e6f20f7b98f8ca9aad0f0b6005c8d218))
 
@@ -75,11 +120,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### <!-- 7 -->Miscellaneous Tasks
-- Updated packaging script for local test of cd pipeline  ([4851ed6](https://github.com/marcelo-6/mqtt-sim/commit/4851ed66d1d2c862f5aef1a0af100e74a0638272))
+- Prepare v0.0.1  by @marcelo-6 in [#17](https://github.com/marcelo-6/mqtt-sim/pull/17) ([e515e23](https://github.com/marcelo-6/mqtt-sim/commit/e515e2358aff8d95309d071778d83a9ceb77f6a8))
 
-- Added github template cliff  ([a56e9a0](https://github.com/marcelo-6/mqtt-sim/commit/a56e9a068ef199934f65e8b1a70baa55c00d6223))
+- Updated packaging script for local test of cd pipeline  by @marcelo-6 ([2fc31e5](https://github.com/marcelo-6/mqtt-sim/commit/2fc31e57f47c09266d337afaab7024b28468430c))
 
-- Add documented CI/CD parity and release recipes  ([8f6c889](https://github.com/marcelo-6/mqtt-sim/commit/8f6c88967450d1bfb891fbbbf6ee13ee5de66ed8))
+- Added github template cliff  by @marcelo-6 ([cb80338](https://github.com/marcelo-6/mqtt-sim/commit/cb8033809da1fff3de29e9909d144af382494dd8))
+
+- Add documented CI/CD parity and release recipes  by @marcelo-6 ([4a8dbc8](https://github.com/marcelo-6/mqtt-sim/commit/4a8dbc869db4370168041141e5dd585717d19094))
 
 - Add script to generate gifs of example config files for docs  by @marcelo-6 ([549b216](https://github.com/marcelo-6/mqtt-sim/commit/549b2169205505cb93dd049a602982351c821f92))
 
@@ -95,11 +142,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Other
-- Migrate to pdm-backend and add PyPI metadata  ([8d61f2d](https://github.com/marcelo-6/mqtt-sim/commit/8d61f2de2da30e50ea23ec7c4e9cceae6a5752e4))
+- Migrate to pdm-backend and add PyPI metadata  by @marcelo-6 ([75c5e53](https://github.com/marcelo-6/mqtt-sim/commit/75c5e538e89916845418a08ae145ab2886f6da60))
 
 
 ### New Contributors
-* @marcelo-6 made their first contribution in [#16](https://github.com/marcelo-6/mqtt-sim/pull/16)
+* @marcelo-6 made their first contribution in [#17](https://github.com/marcelo-6/mqtt-sim/pull/17)
 * @DamascenoRafael made their first contribution
 * @vordimous made their first contribution
 * @raph-topo made their first contribution
