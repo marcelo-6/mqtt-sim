@@ -31,7 +31,7 @@ slow streams, fast streams, whatever you need for testing or demos.
 * Inline table output while the simulator is running
 
 > [!NOTE]
-> Below is a sample of the simulated data generated the terminal UI is [EdJoPaTo/mqttui](https://github.com/EdJoPaTo/mqttui)
+> Below is a sample of the simulated data generated, the terminal UI is [EdJoPaTo/mqttui](https://github.com/EdJoPaTo/mqttui)
 
 ![Simulator Data Sample](docs/images/mqttui-sample.gif)
 
@@ -84,7 +84,7 @@ docker compose up -d broker
 
 Pick the path that matches how you want to use it.
 
-> [!TIP] Recommended
+> [!TIP]
 > <details>
 >
 > <summary>Just want to use the tool? Install it from PyPI</summary>
@@ -185,8 +185,7 @@ page for that too:
 
 * [docs/math_expression.md](./docs/math_expression.md)
 
-The shipped examples are heavily commented on purpose, so you can read them
-top-down and copy only the sections you need.
+The shipped examples are heavily commented on purpose, so you can read them and copy only the sections you need.
 
 If you want the full schema, see [docs/configuration.md](./docs/configuration.md).
 If you just want something to ~~steal and tweak~~ reference existing config, the examples folder is usually
