@@ -1,4 +1,4 @@
 paho-mqtt==2.1.0
-pydantic==2.12.5
+pydantic==2.13.3
 rich>=14.2.0
 typer>=0.24.1
